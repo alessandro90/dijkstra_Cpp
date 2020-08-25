@@ -1,0 +1,6 @@
+.vscode/
+dijkstra
+dijkstra.exe
+*txt
+!test_file.txt
+build
