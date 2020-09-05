@@ -4,3 +4,5 @@ dijkstra.exe
 *txt
 !test_file.txt
 build
+*.bat
+*.sh

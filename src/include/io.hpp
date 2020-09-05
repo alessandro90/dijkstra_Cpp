@@ -41,38 +41,19 @@ private:
 
 class File {
 public:
-    explicit File(std::string_view fname, openmode mode = in)
-        : stream { fname.data(), mode }
-    {
-        if (!stateok())
-            throw FileException { state() };
-    }
+    explicit File(std::string_view fname, openmode mode = in);
 
-    void write(std::string_view text)
-    {
-        stream.write(text.data(), static_cast<std::streamsize>(text.size()));
-    }
+    void write(std::string_view text);
 
-    void append(std::string_view text) { stream << text.data(); }
+    void append(std::string_view text);
 
-    std::string read()
-    {
-        return std::string {
-            std::istreambuf_iterator<char>(stream),
-            std::istreambuf_iterator<char>()
-        };
-    }
+    [[nodiscard]] std::string read();
 
-    std::string readline()
-    {
-        std::string str;
-        std::getline(stream, str);
-        return str;
-    }
+    std::string readline();
 
-    std::ios_base::iostate state() const { return stream.rdstate(); }
+    [[nodiscard]] std::ios_base::iostate state() const;
 
-    bool stateok() const { return state() == std::ios_base::goodbit; }
+    [[nodiscard]] bool stateok() const;
 
     class iterator {
     public:
@@ -85,45 +66,29 @@ public:
         using iterator_concept = std::input_iterator_tag;
 
         iterator() = default;
-        explicit iterator(std::fstream* s_)
-            : s { s_ }
-        {
-            if (s != nullptr && !std::getline(*s, str))
-                setnull();
-        }
+        explicit iterator(std::fstream* s_);
 
-        bool operator==(iterator const& other) const { return s == other.s; }
+        [[nodiscard]] bool operator==(iterator const& other) const;
 
-        bool operator!=(iterator const& other) const { return !(*this == other); }
+        [[nodiscard]] bool operator!=(iterator const& other) const;
 
-        value_type operator*() const { return str; }
+        [[nodiscard]] value_type operator*() const;
 
-        pointer operator->() const { return &str; }
+        [[nodiscard]] pointer operator->() const;
 
-        iterator& operator++()
-        {
-            if (!std::getline(*s, str))
-                setnull();
-            return *this;
-        }
+        iterator& operator++();
 
-        iterator operator++(int)
-        {
-            iterator it = *this;
-            if (!std::getline(*s, str))
-                setnull();
-            return it;
-        }
+        iterator operator++(int);
 
     private:
-        void setnull() { s = nullptr; }
+        void setnull();
         std::fstream* s { nullptr };
         std::string str {};
     };
 
-    auto begin() { return iterator { &stream }; }
+    [[nodiscard]] iterator begin();
 
-    auto end() { return iterator {}; }
+    [[nodiscard]] iterator end();
 
 private:
     std::fstream stream;
