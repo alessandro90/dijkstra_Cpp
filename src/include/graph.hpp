@@ -3,6 +3,7 @@
 
 #include "number.hpp"
 #include <compare>
+#include <exception>
 #include <functional>
 #include <limits>
 #include <ostream>
@@ -12,7 +13,8 @@
 
 using X = num::Number<int, struct TypeX>;
 using Y = num::Number<int, struct TypeY>;
-using Distance = num::Number<float, struct Dist>;
+using Distance = num::Number<double, struct Dist>;
+using CharType = unsigned char;
 
 struct Position {
     X x;
@@ -26,50 +28,63 @@ bool operator!=(Position const& a, Position const& b);
 std::ostream& operator<<(std::ostream& os, Position const& pos);
 Distance distance(Position const& p1, Position const& p2);
 
-inline constexpr char pointEmpty = '*';
-inline constexpr char pointObstacle = 'X';
-inline constexpr char pointShortest = 'S';
-inline constexpr char pointVisited = 'V';
-inline constexpr char pointStart = 'A';
-inline constexpr char pointEnd = 'B';
+inline constexpr CharType pointEmpty { '*' };
+inline constexpr CharType pointObstacle { 'X' };
+inline constexpr CharType pointShortest { 254 };
+inline constexpr CharType pointBifurcation { 219 };
+// inline constexpr CharType pointShortest { 254u };
+inline constexpr CharType pointVisited { '.' };
+inline constexpr CharType pointStart { 'A' };
+inline constexpr CharType pointEnd { 'B' };
 inline constexpr Distance infinite { std::numeric_limits<typename Distance::value_type>::max() };
 
 struct Vertex {
 public:
     using UniqueIdType = int;
-    explicit Vertex(char type_, Position const& p, UniqueIdType id);
+    explicit Vertex(CharType type_, Position const& p, UniqueIdType id);
     friend std::ostream& operator<<(std::ostream& os, Vertex const& v);
-    [[nodiscard]] Position const& getPos() const;
+    [[nodiscard]] Position const& pos() const;
     void setDist(Distance const& d);
-    void setType(char t);
+    void setType(CharType t);
     [[nodiscard]] bool isStart() const;
     [[nodiscard]] bool isEnd() const;
+    [[nodiscard]] bool isShortest() const;
     [[nodiscard]] bool isValid() const;
-    [[nodiscard]] char type() const;
+    [[nodiscard]] CharType type() const;
     [[nodiscard]] Distance const& dist() const;
     [[nodiscard]] bool distIsInfinite() const;
     [[nodiscard]] auto operator<=>(Vertex const& v) const -> std::common_comparison_category_t<decltype(std::declval<UniqueIdType>() <=> std::declval<UniqueIdType>()), decltype(std::declval<Vertex>().dist() <=> std::declval<Vertex>().dist())>;
+    [[nodiscard]] UniqueIdType id() const;
 
 private:
-    char mType;
-    Position pos;
+    CharType mType;
+    Position mPos;
     Distance mDist { infinite };
     // Needed to insert vertex in a set
     UniqueIdType const uniqueId;
+};
+
+class InvalidGraphException : std::exception {
+public:
+    const char* what() const noexcept override
+    {
+        return "Invalid graph point type";
+    }
 };
 
 class Graph {
 public:
     using VertexType = Vertex;
     inline static constexpr unsigned closests { 8 };
-    explicit Graph(std::string_view fname);
 
-    [[nodiscard]] VertexType* getVertexPtr(Position const& pos);
-    [[nodiscard]] std::vector<std::reference_wrapper<VertexType>> getNeighborhoods(VertexType const& v);
+    [[nodiscard]] VertexType* vertexPtr(Position const& pos);
+    [[nodiscard]] std::vector<std::reference_wrapper<VertexType>> neighborhoods(VertexType const& v);
     [[nodiscard]] std::string stringify() const;
-    [[nodiscard]] std::vector<std::vector<VertexType>>& getNodes();
+    [[nodiscard]] std::vector<std::vector<VertexType>>& nodes();
     void markAsShortest(VertexType const& v);
     void markAsVisited(VertexType const& v);
+    void markAsBifurcation(VertexType const& v);
+    void loadFile(std::string_view fname);
 
 private:
     std::vector<std::vector<VertexType>> vertex {};

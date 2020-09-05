@@ -1,10 +1,11 @@
 #include "dijkstra.hpp"
 #include <algorithm>
+#include <iomanip>
 
 Dijkstra::Dijkstra(Graph& g)
     : graph { g }
 {
-    auto& vertices = graph.getNodes();
+    auto& vertices = graph.nodes();
     for (auto& row : vertices) {
         if (auto it = std::find_if(
                 row.begin(),
@@ -26,13 +27,13 @@ bool Dijkstra::done()
 
     auto current = extractNearest();
 
-    auto neighborhoods = graph.getNeighborhoods(current);
+    auto neighborhoods = graph.neighborhoods(current);
     for (auto nodeRef : neighborhoods) {
         auto& node = nodeRef.get();
         if (!node.isStart() && !node.isEnd())
             graph.markAsVisited(node);
 
-        Distance d = distance(current.getPos(), node.getPos());
+        Distance d = distance(current.pos(), node.pos());
 
         if (Distance tentativeDist = current.dist() + d;
             tentativeDist < node.dist()) {
@@ -50,7 +51,6 @@ void Dijkstra::marKShortestPaths()
 {
     if (dst == nullptr)
         return;
-
     traverse(*dst);
 }
 
@@ -58,15 +58,25 @@ void Dijkstra::traverse(Graph::VertexType const& v)
 {
     if (v.isStart())
         return;
-    auto neigh = graph.getNeighborhoods(v);
-    auto nearest = std::min_element(neigh.begin(), neigh.end(), [](Graph::VertexType const& va, Graph::VertexType const& vb) {
-        return va.dist() < vb.dist();
-    });
+
+    auto neigh = graph.neighborhoods(v);
+    auto nearest = std::min_element(neigh.begin(), neigh.end(),
+        [](Graph::VertexType const& va, Graph::VertexType const& vb) {
+            return va.dist() < vb.dist();
+        });
+
     for (auto& n : neigh) {
-        if (n.get().dist() != nearest->get().dist() || n.get().isStart())
+        auto& node = n.get();
+        if (node.dist() > nearest->get().dist()
+            || node.isStart()
+            || node.isEnd()
+            || node.isShortest()) {
             continue;
-        graph.markAsShortest(n.get());
-        traverse(n.get());
+        }
+        if (nearest->get().pos() != node.pos())
+            graph.markAsBifurcation(v);
+        graph.markAsShortest(node);
+        traverse(node);
     }
 }
 

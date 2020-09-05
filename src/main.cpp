@@ -9,7 +9,13 @@ int main(int argc, char* argv[])
         std::cerr << "Need a filename" << std::endl;
         return -1;
     }
-    Graph graph { argv[1] };
+    Graph graph {};
+    try {
+        graph.loadFile(argv[1]);
+    } catch (InvalidGraphException const& e) {
+        std::cerr << e.what() << '\n';
+        return -1;
+    }
     Dijkstra djk { graph };
     while (!djk.done())
         ;

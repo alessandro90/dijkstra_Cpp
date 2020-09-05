@@ -34,13 +34,13 @@ std::ostream& operator<<(std::ostream& os, Position const& pos)
 }
 Distance distance(Position const& p1, Position const& p2)
 {
-    return Distance { std::sqrt(static_cast<float>(std::pow((p1.x - p2.x).value(), 2)
+    return Distance { std::sqrt(static_cast<double>(std::pow((p1.x - p2.x).value(), 2)
         + std::pow((p1.y - p2.y).value(), 2))) };
 }
 
-Vertex::Vertex(char type_, Position const& p, UniqueIdType id)
+Vertex::Vertex(CharType type_, Position const& p, UniqueIdType id)
     : mType { type_ }
-    , pos { p }
+    , mPos { p }
     , uniqueId { id }
 {
     switch (mType) {
@@ -55,24 +55,26 @@ Vertex::Vertex(char type_, Position const& p, UniqueIdType id)
     }
 }
 
-char Vertex::type() const { return mType; }
+CharType Vertex::type() const { return mType; }
 
 bool Vertex::isStart() const { return type() == pointStart; }
 
 bool Vertex::isEnd() const { return type() == pointEnd; }
 
+bool Vertex::isShortest() const
+{
+    return type() == pointShortest || type() == pointBifurcation;
+}
+
 bool Vertex::isValid() const { return type() != pointObstacle; }
 
-Distance const& Vertex::dist() const
-{
-    return mDist;
-}
+Distance const& Vertex::dist() const { return mDist; }
 
 bool Vertex::distIsInfinite() const { return dist() == infinite; }
 
 void Vertex::setDist(Distance const& d) { mDist = d; }
 
-void Vertex::setType(char t) { mType = t; }
+void Vertex::setType(CharType t) { mType = t; }
 
 auto Vertex::operator<=>(Vertex const& v) const -> std::common_comparison_category_t<decltype(std::declval<UniqueIdType>() <=> std::declval<UniqueIdType>()), decltype(std::declval<Vertex>().dist() <=> std::declval<Vertex>().dist())>
 {
@@ -81,21 +83,41 @@ auto Vertex::operator<=>(Vertex const& v) const -> std::common_comparison_catego
     return uniqueId <=> v.uniqueId;
 }
 
-Position const& Vertex::getPos() const
-{
-    return pos;
-}
+Vertex::UniqueIdType Vertex::id() const { return uniqueId; }
 
-Graph::Graph(std::string_view fname)
+Position const& Vertex::pos() const { return mPos; }
+
+void Graph::loadFile(std::string_view fname)
 {
     io::File f { fname, io::in };
     VertexType::UniqueIdType elementCount { 0 };
+    bool foundStart { false };
+    bool foundEnd { false };
     auto lineCount { 0 };
     for (auto line : f) {
         auto colCount { 0 };
         std::vector<Vertex> v;
         v.reserve(line.size());
         for (auto c : line) {
+            switch (c) {
+            case pointStart:
+                if (foundStart)
+                    throw InvalidGraphException {};
+                foundStart = true;
+                break;
+            case pointEnd:
+                if (foundEnd)
+                    throw InvalidGraphException {};
+                foundEnd = true;
+                break;
+            case pointEmpty:
+            case pointObstacle:
+                // Ok valid entries
+                break;
+            default:
+                throw InvalidGraphException {};
+                break;
+            }
             v.emplace_back(c, Position { X { lineCount }, Y { colCount } }, elementCount);
             colCount += 1;
             elementCount += 1;
@@ -105,20 +127,20 @@ Graph::Graph(std::string_view fname)
     }
 }
 
-Graph::VertexType* Graph::getVertexPtr(Position const& pos)
+Graph::VertexType* Graph::vertexPtr(Position const& mPos)
 {
-    if (pos.x.value() < static_cast<int>(vertex.size())
-        && pos.y.value() < static_cast<int>(vertex[0].size())
-        && pos.x.value() >= 0
-        && pos.y.value() >= 0)
-        return &vertex[pos.x.value()][pos.y.value()];
+    if (mPos.x.value() >= 0
+        && mPos.y.value() >= 0
+        && mPos.x.value() < static_cast<decltype(mPos.x.value())>(vertex.size())
+        && mPos.y.value() < static_cast<decltype(mPos.y.value())>(vertex[mPos.x.value()].size()))
+        return &vertex[mPos.x.value()][mPos.y.value()];
     return nullptr;
 }
 
-std::vector<std::reference_wrapper<Graph::VertexType>> Graph::getNeighborhoods(Graph::VertexType const& v)
+std::vector<std::reference_wrapper<Graph::VertexType>> Graph::neighborhoods(Graph::VertexType const& v)
 {
-    std::vector<std::reference_wrapper<Vertex>> neighborhoods;
-    neighborhoods.reserve(Graph::closests);
+    std::vector<std::reference_wrapper<Vertex>> neigh;
+    neigh.reserve(Graph::closests);
 
     constexpr static std::array coords {
         Position { X { -1 }, Y { -1 } },
@@ -130,25 +152,42 @@ std::vector<std::reference_wrapper<Graph::VertexType>> Graph::getNeighborhoods(G
         Position { X { 0 }, Y { 1 } },
         Position { X { 1 }, Y { 1 } }
     };
+    // constexpr static std::array coords {
+    //     // Position { X { -1 }, Y { -1 } },
+    //     Position { X { 0 }, Y { -1 } },
+    //     // Position { X { 1 }, Y { -1 } },
+    //     Position { X { -1 }, Y { 0 } },
+    //     Position { X { 1 }, Y { 0 } },
+    //     // Position { X { -1 }, Y { 1 } },
+    //     Position { X { 0 }, Y { 1 } },
+    //     // Position { X { 1 }, Y { 1 } }
+    // };
 
     for (auto const& pos : coords) {
-        if (auto ptr = getVertexPtr({ v.getPos() - pos });
+        if (auto ptr = vertexPtr({ v.pos() - pos });
             ptr != nullptr && ptr->isValid())
-            neighborhoods.push_back(*ptr);
+            neigh.push_back(*ptr);
     }
-    return neighborhoods;
+    return neigh;
 }
 
-std::vector<std::vector<Graph::VertexType>>& Graph::getNodes() { return vertex; }
+std::vector<std::vector<Graph::VertexType>>& Graph::nodes() { return vertex; }
 
 void Graph::markAsShortest(Graph::VertexType const& v)
 {
-    auto pos = v.getPos();
+    auto pos = v.pos();
     vertex[pos.x.value()][pos.y.value()].setType(pointShortest);
 }
+
+void Graph::markAsBifurcation(Graph::VertexType const& v)
+{
+    auto pos = v.pos();
+    vertex[pos.x.value()][pos.y.value()].setType(pointBifurcation);
+}
+
 void Graph::markAsVisited(Graph::VertexType const& v)
 {
-    auto pos = v.getPos();
+    auto pos = v.pos();
     vertex[pos.x.value()][pos.y.value()].setType(pointVisited);
 }
 
@@ -174,6 +213,7 @@ std::ostream& operator<<(std::ostream& os, Graph const& lvl)
 std::ostream& operator<<(std::ostream& os, Graph::VertexType const& v)
 {
     return os << v.type();
+    // return os << +v.dist().value() << '-';
 }
 
 void writeGraph(std::string_view fname, Graph const& graph)
