@@ -61,7 +61,7 @@ private:
     Position mPos;
     Distance mDist { infinite };
     // Needed to insert vertex in a set
-    UniqueIdType const uniqueId;
+    UniqueIdType uniqueId;
 };
 
 class InvalidGraphException : std::exception {

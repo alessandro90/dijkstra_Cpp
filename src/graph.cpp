@@ -195,7 +195,7 @@ std::string Graph::stringify() const
 {
     std::string s {};
     for (auto const& line : vertex) {
-        for (auto v : line) {
+        for (auto const& v : line) {
             std::ostringstream ss {};
             ss << v;
             s += ss.str();

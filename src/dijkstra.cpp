@@ -1,6 +1,5 @@
 #include "dijkstra.hpp"
 #include <algorithm>
-#include <iomanip>
 
 Dijkstra::Dijkstra(Graph& g)
     : graph { g }
@@ -25,7 +24,7 @@ bool Dijkstra::done()
         return true;
     }
 
-    auto current = extractNearest();
+    auto current = extractFirst();
 
     auto neighborhoods = graph.neighborhoods(current);
     for (auto nodeRef : neighborhoods) {
@@ -49,7 +48,7 @@ bool Dijkstra::done()
 
 void Dijkstra::marKShortestPaths()
 {
-    if (dst == nullptr)
+    if (!dst.has_value())
         return;
     traverse(*dst);
 }
@@ -90,10 +89,10 @@ bool Dijkstra::completed() const
 void Dijkstra::setDestination()
 {
     if (!unvisited.empty() && unvisited.begin()->isEnd())
-        dst = std::addressof(*unvisited.begin());
+        dst = extractFirst();
 }
 
-Graph::VertexType Dijkstra::extractNearest()
+Graph::VertexType Dijkstra::extractFirst()
 {
     return unvisited.extract(*unvisited.begin()).value();
 }

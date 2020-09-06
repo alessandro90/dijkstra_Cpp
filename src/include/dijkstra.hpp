@@ -2,6 +2,7 @@
 #define DIJKSTRA_HPP
 
 #include "graph.hpp"
+#include <optional>
 #include <set>
 
 class Dijkstra {
@@ -19,10 +20,10 @@ private:
 
     void setDestination();
 
-    [[nodiscard]] Graph::VertexType extractNearest();
+    [[nodiscard]] Graph::VertexType extractFirst();
 
     Graph& graph;
-    Graph::VertexType const* dst { nullptr };
+    std::optional<Graph::VertexType> dst {};
     std::set<Graph::VertexType> unvisited {};
 };
 
