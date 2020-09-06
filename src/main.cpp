@@ -1,7 +1,14 @@
 #include "dijkstra.hpp"
 #include "easy_print.hpp"
 #include "graph.hpp"
+#include "io.hpp"
 #include <iostream>
+#include <string>
+
+int readSquareSize()
+{
+    return std::stoi(io::File { "../src/config.txt" }.read());
+}
 
 int main(int argc, char* argv[])
 {
@@ -9,10 +16,10 @@ int main(int argc, char* argv[])
         std::cerr << "Need a filename" << std::endl;
         return -1;
     }
-    Graph graph {};
+    gr::Graph graph {};
     try {
         graph.loadFile(argv[1]);
-    } catch (InvalidGraphException const& e) {
+    } catch (gr::InvalidGraphException const& e) {
         std::cerr << e.what() << '\n';
         return -1;
     }
@@ -20,5 +27,4 @@ int main(int argc, char* argv[])
     while (!djk.done())
         ;
     djk.marKShortestPaths();
-    print(graph, '\n');
 }

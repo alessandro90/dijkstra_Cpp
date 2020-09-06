@@ -7,24 +7,24 @@
 
 class Dijkstra {
 public:
-    Dijkstra(Graph& g);
+    Dijkstra(gr::Graph& g);
 
     [[nodiscard]] bool done();
 
     void marKShortestPaths();
 
 private:
-    void traverse(Graph::VertexType const& v);
+    void traverse(gr::Graph::VertexType const& v);
 
     [[nodiscard]] bool completed() const;
 
     void setDestination();
 
-    [[nodiscard]] Graph::VertexType extractFirst();
+    [[nodiscard]] gr::Graph::VertexType extractFirst();
 
-    Graph& graph;
-    std::optional<Graph::VertexType> dst {};
-    std::set<Graph::VertexType> unvisited {};
+    gr::Graph& graph;
+    std::optional<gr::Graph::VertexType> dst {};
+    std::set<gr::Graph::VertexType> unvisited {};
 };
 
 #endif

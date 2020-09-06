@@ -1,7 +1,7 @@
 #include "dijkstra.hpp"
 #include <algorithm>
 
-Dijkstra::Dijkstra(Graph& g)
+Dijkstra::Dijkstra(gr::Graph& g)
     : graph { g }
 {
     auto& vertices = graph.nodes();
@@ -32,9 +32,9 @@ bool Dijkstra::done()
         if (!node.isStart() && !node.isEnd())
             graph.markAsVisited(node);
 
-        Distance d = distance(current.pos(), node.pos());
+        gr::Distance d = distance(current.pos(), node.pos());
 
-        if (Distance tentativeDist = current.dist() + d;
+        if (gr::Distance tentativeDist = current.dist() + d;
             tentativeDist < node.dist()) {
             if (!node.distIsInfinite())
                 unvisited.erase(node);
@@ -53,14 +53,14 @@ void Dijkstra::marKShortestPaths()
     traverse(*dst);
 }
 
-void Dijkstra::traverse(Graph::VertexType const& v)
+void Dijkstra::traverse(gr::Graph::VertexType const& v)
 {
     if (v.isStart())
         return;
 
     auto neigh = graph.neighborhoods(v);
     auto nearest = std::min_element(neigh.begin(), neigh.end(),
-        [](Graph::VertexType const& va, Graph::VertexType const& vb) {
+        [](gr::Graph::VertexType const& va, gr::Graph::VertexType const& vb) {
             return va.dist() < vb.dist();
         });
 
@@ -92,7 +92,7 @@ void Dijkstra::setDestination()
         dst = extractFirst();
 }
 
-Graph::VertexType Dijkstra::extractFirst()
+gr::Graph::VertexType Dijkstra::extractFirst()
 {
     return unvisited.extract(*unvisited.begin()).value();
 }

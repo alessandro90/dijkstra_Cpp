@@ -7,14 +7,14 @@
 #define UNARY(op)                        \
     Number& operator op(Number const& a) \
     {                                    \
-        value_ op = a.value_;            \
+        value_ op a.value_;              \
         return *this;                    \
     }
 
 #define UNARY_N(op)          \
     Number& operator op(T a) \
     {                        \
-        value_ op = T;       \
+        value_ op a;         \
         return *this;        \
     }
 
@@ -47,6 +47,7 @@ template <typename T, typename Tag>
     requires std::integral<T> || std::floating_point<T> struct Number {
 public:
     using value_type = T;
+    constexpr Number() = default;
     explicit constexpr Number(T c)
         : value_ { c }
     {
@@ -64,10 +65,7 @@ public:
     UNARY_N(/=)
 
     [[nodiscard]] constexpr auto operator<=>(Number const& a) const = default;
-    [[nodiscard]] constexpr auto operator<=>(T b) const
-    {
-        return value() <=> b;
-    }
+    [[nodiscard]] constexpr auto operator<=>(T b) const { return value() <=> b; }
 
 private:
     T value_ {};

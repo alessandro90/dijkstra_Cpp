@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+namespace gr {
 Position operator+(Position const& a, Position const& b)
 {
     return { { a.x + b.x }, { a.y + b.y } };
@@ -19,14 +20,6 @@ Position operator+(Position const& a, Position const& b)
 Position operator-(Position const& a, Position const& b)
 {
     return { { a.x - b.x }, { a.y - b.y } };
-}
-bool operator==(Position const& a, Position const& b)
-{
-    return a.x == b.x && a.y == b.y;
-}
-bool operator!=(Position const& a, Position const& b)
-{
-    return !(a == b);
 }
 std::ostream& operator<<(std::ostream& os, Position const& pos)
 {
@@ -38,10 +31,10 @@ Distance distance(Position const& p1, Position const& p2)
         + std::pow((p1.y - p2.y).value(), 2))) };
 }
 
-Vertex::Vertex(CharType type_, Position const& p, UniqueIdType id)
-    : mType { type_ }
+Vertex::Vertex(UniqueIdType id, CharType type_, Position const& p)
+    : uniqueId { id }
+    , mType { type_ }
     , mPos { p }
-    , uniqueId { id }
 {
     switch (mType) {
     case pointEmpty:
@@ -75,13 +68,6 @@ bool Vertex::distIsInfinite() const { return dist() == infinite; }
 void Vertex::setDist(Distance const& d) { mDist = d; }
 
 void Vertex::setType(CharType t) { mType = t; }
-
-auto Vertex::operator<=>(Vertex const& v) const -> std::common_comparison_category_t<decltype(std::declval<UniqueIdType>() <=> std::declval<UniqueIdType>()), decltype(std::declval<Vertex>().dist() <=> std::declval<Vertex>().dist())>
-{
-    if (dist() != v.dist())
-        return dist() <=> v.dist();
-    return uniqueId <=> v.uniqueId;
-}
 
 Vertex::UniqueIdType Vertex::id() const { return uniqueId; }
 
@@ -118,7 +104,7 @@ void Graph::loadFile(std::string_view fname)
                 throw InvalidGraphException {};
                 break;
             }
-            v.emplace_back(c, Position { X { lineCount }, Y { colCount } }, elementCount);
+            v.emplace_back(elementCount, c, Position { X { lineCount }, Y { colCount } });
             colCount += 1;
             elementCount += 1;
         }
@@ -152,16 +138,6 @@ std::vector<std::reference_wrapper<Graph::VertexType>> Graph::neighborhoods(Grap
         Position { X { 0 }, Y { 1 } },
         Position { X { 1 }, Y { 1 } }
     };
-    // constexpr static std::array coords {
-    //     // Position { X { -1 }, Y { -1 } },
-    //     Position { X { 0 }, Y { -1 } },
-    //     // Position { X { 1 }, Y { -1 } },
-    //     Position { X { -1 }, Y { 0 } },
-    //     Position { X { 1 }, Y { 0 } },
-    //     // Position { X { -1 }, Y { 1 } },
-    //     Position { X { 0 }, Y { 1 } },
-    //     // Position { X { 1 }, Y { 1 } }
-    // };
 
     for (auto const& pos : coords) {
         if (auto ptr = vertexPtr({ v.pos() - pos });
@@ -213,10 +189,10 @@ std::ostream& operator<<(std::ostream& os, Graph const& lvl)
 std::ostream& operator<<(std::ostream& os, Graph::VertexType const& v)
 {
     return os << v.type();
-    // return os << +v.dist().value() << '-';
 }
 
 void writeGraph(std::string_view fname, Graph const& graph)
 {
     io::File { fname, io::out }.write(graph.stringify().c_str());
+}
 }

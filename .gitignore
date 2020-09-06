@@ -2,6 +2,7 @@
 dijkstra
 dijkstra.exe
 *txt
+!CMakeLists.txt
 !test_file.txt
 build
 *.bat

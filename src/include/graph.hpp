@@ -11,6 +11,8 @@
 #include <utility>
 #include <vector>
 
+namespace gr {
+
 using X = num::Number<int, struct TypeX>;
 using Y = num::Number<int, struct TypeY>;
 using Distance = num::Number<double, struct Dist>;
@@ -19,12 +21,11 @@ using CharType = unsigned char;
 struct Position {
     X x;
     Y y;
+    auto operator<=>(Position const&) const = default;
 };
 
 Position operator+(Position const& a, Position const& b);
 Position operator-(Position const& a, Position const& b);
-bool operator==(Position const& a, Position const& b);
-bool operator!=(Position const& a, Position const& b);
 std::ostream& operator<<(std::ostream& os, Position const& pos);
 Distance distance(Position const& p1, Position const& p2);
 
@@ -41,7 +42,7 @@ inline constexpr Distance infinite { std::numeric_limits<typename Distance::valu
 struct Vertex {
 public:
     using UniqueIdType = int;
-    explicit Vertex(CharType type_, Position const& p, UniqueIdType id);
+    explicit Vertex(UniqueIdType id, CharType type_, Position const& p);
     friend std::ostream& operator<<(std::ostream& os, Vertex const& v);
     [[nodiscard]] Position const& pos() const;
     void setDist(Distance const& d);
@@ -53,15 +54,15 @@ public:
     [[nodiscard]] CharType type() const;
     [[nodiscard]] Distance const& dist() const;
     [[nodiscard]] bool distIsInfinite() const;
-    [[nodiscard]] auto operator<=>(Vertex const& v) const -> std::common_comparison_category_t<decltype(std::declval<UniqueIdType>() <=> std::declval<UniqueIdType>()), decltype(std::declval<Vertex>().dist() <=> std::declval<Vertex>().dist())>;
+    [[nodiscard]] auto operator<=>(Vertex const& v) const = default;
     [[nodiscard]] UniqueIdType id() const;
 
 private:
-    CharType mType;
-    Position mPos;
     Distance mDist { infinite };
     // Needed to insert vertex in a set
-    UniqueIdType uniqueId;
+    UniqueIdType uniqueId {};
+    CharType mType {};
+    Position mPos {};
 };
 
 class InvalidGraphException : std::exception {
@@ -93,5 +94,5 @@ private:
 std::ostream& operator<<(std::ostream& os, Graph const& lvl);
 std::ostream& operator<<(std::ostream& os, Graph::VertexType const& v);
 void writeGraph(std::string_view fname, Graph const& graph);
-
+}
 #endif
