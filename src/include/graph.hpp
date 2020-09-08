@@ -35,6 +35,7 @@ inline constexpr CharType pointShortest { 254 };
 inline constexpr CharType pointBifurcation { 219 };
 // inline constexpr CharType pointShortest { 254u };
 inline constexpr CharType pointVisited { '.' };
+inline constexpr CharType pointFront { 'f' };
 inline constexpr CharType pointStart { 'A' };
 inline constexpr CharType pointEnd { 'B' };
 inline constexpr Distance infinite { std::numeric_limits<typename Distance::value_type>::max() };
@@ -82,9 +83,7 @@ public:
     [[nodiscard]] std::vector<std::reference_wrapper<VertexType>> neighborhoods(VertexType const& v);
     [[nodiscard]] std::string stringify() const;
     [[nodiscard]] std::vector<std::vector<VertexType>>& nodes();
-    void markAsShortest(VertexType const& v);
-    void markAsVisited(VertexType const& v);
-    void markAsBifurcation(VertexType const& v);
+    void markAs(VertexType const& v, CharType);
     void loadFile(std::string_view fname);
 
 private:

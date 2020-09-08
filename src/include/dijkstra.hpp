@@ -18,8 +18,6 @@ private:
 
     [[nodiscard]] bool completed() const;
 
-    void setDestination();
-
     [[nodiscard]] gr::Graph::VertexType extractFirst();
 
     gr::Graph& graph;

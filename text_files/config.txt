@@ -1,0 +1,4 @@
+edgeWidth: 10
+edgeHeight: 10
+maxFrameRate: 0
+graphPath: ../text_files/example.txt

@@ -38,7 +38,7 @@
     template <typename T, typename Tag>                                    \
     [[nodiscard]] constexpr auto operator op(T b, Number<T, Tag> const& a) \
     {                                                                      \
-        return Number<T, Tag> { a.value() op b };                          \
+        return Number<T, Tag> { b op a.value() };                          \
     }
 
 namespace num {
@@ -58,11 +58,13 @@ public:
     UNARY(-=)
     UNARY(*=)
     UNARY(/=)
+    UNARY(%=)
 
     UNARY_N(+=)
     UNARY_N(-=)
     UNARY_N(*=)
     UNARY_N(/=)
+    UNARY_N(%=)
 
     [[nodiscard]] constexpr auto operator<=>(Number const& a) const = default;
     [[nodiscard]] constexpr auto operator<=>(T b) const { return value() <=> b; }
@@ -81,16 +83,19 @@ BINARY(+)
 BINARY(-)
 BINARY(*)
 BINARY(/)
+BINARY(%)
 
 BINARY_N(+)
 BINARY_N(-)
 BINARY_N(*)
 BINARY_N(/)
+BINARY_N(%)
 
 BINARY_NR(+)
 BINARY_NR(-)
 BINARY_NR(*)
 BINARY_NR(/)
+BINARY_NR(%)
 
 template <typename T, typename Tag>
 auto& operator<<(std::ostream& os, Number<T, Tag> const& a)

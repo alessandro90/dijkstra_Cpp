@@ -19,25 +19,34 @@ Dijkstra::Dijkstra(gr::Graph& g)
 
 bool Dijkstra::done()
 {
-    if (completed()) {
-        setDestination();
+    if (completed())
         return true;
-    }
 
     auto current = extractFirst();
+    if (!current.isStart())
+        graph.markAs(current, gr::pointVisited);
 
     auto neighborhoods = graph.neighborhoods(current);
     for (auto nodeRef : neighborhoods) {
         auto& node = nodeRef.get();
-        if (!node.isStart() && !node.isEnd())
-            graph.markAsVisited(node);
+
+        if (node.isStart())
+            continue;
+        else if (node.isEnd()) {
+            dst = node;
+            return true;
+        }
 
         gr::Distance d = distance(current.pos(), node.pos());
 
         if (gr::Distance tentativeDist = current.dist() + d;
             tentativeDist < node.dist()) {
-            if (!node.distIsInfinite())
+            if (!node.distIsInfinite()) {
                 unvisited.erase(node);
+                graph.markAs(node, gr::pointVisited);
+            } else {
+                graph.markAs(node, gr::pointFront);
+            }
             node.setDist(tentativeDist);
             unvisited.insert(node);
         }
@@ -73,8 +82,8 @@ void Dijkstra::traverse(gr::Graph::VertexType const& v)
             continue;
         }
         if (nearest->get().pos() != node.pos())
-            graph.markAsBifurcation(v);
-        graph.markAsShortest(node);
+            graph.markAs(v, gr::pointBifurcation);
+        graph.markAs(node, gr::pointShortest);
         traverse(node);
     }
 }
@@ -83,13 +92,7 @@ bool Dijkstra::completed() const
 {
     return unvisited.empty()
         || unvisited.begin()->distIsInfinite()
-        || unvisited.begin()->isEnd();
-}
-
-void Dijkstra::setDestination()
-{
-    if (!unvisited.empty() && unvisited.begin()->isEnd())
-        dst = extractFirst();
+        || dst.has_value();
 }
 
 gr::Graph::VertexType Dijkstra::extractFirst()

@@ -149,22 +149,10 @@ std::vector<std::reference_wrapper<Graph::VertexType>> Graph::neighborhoods(Grap
 
 std::vector<std::vector<Graph::VertexType>>& Graph::nodes() { return vertex; }
 
-void Graph::markAsShortest(Graph::VertexType const& v)
+void Graph::markAs(Graph::VertexType const& v, CharType pointType)
 {
     auto pos = v.pos();
-    vertex[pos.x.value()][pos.y.value()].setType(pointShortest);
-}
-
-void Graph::markAsBifurcation(Graph::VertexType const& v)
-{
-    auto pos = v.pos();
-    vertex[pos.x.value()][pos.y.value()].setType(pointBifurcation);
-}
-
-void Graph::markAsVisited(Graph::VertexType const& v)
-{
-    auto pos = v.pos();
-    vertex[pos.x.value()][pos.y.value()].setType(pointVisited);
+    vertex[pos.x.value()][pos.y.value()].setType(pointType);
 }
 
 std::string Graph::stringify() const
