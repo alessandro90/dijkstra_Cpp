@@ -1,7 +1,9 @@
+#ifndef COLORS_HPP
+#define COLORS_HPP
 #include "SFML/Graphics.hpp"
 #include <array>
 
-inline std::array colors = {
+inline std::array const colors = {
     sf::Color { 109, 254, 46 },
     sf::Color { 73, 252, 61 },
     sf::Color { 0, 250, 74 },
@@ -43,3 +45,18 @@ inline std::array colors = {
     sf::Color { 0, 63, 254 },
     sf::Color { 48, 47, 242 }
 };
+
+inline sf::Color const emptyColor { 100, 100, 100 };
+inline sf::Color const obstacleColor { 0, 0, 0 };
+inline sf::Color const shortestColor { 179, 108, 255 };
+inline sf::Color const frontColor { 255, 182, 108 };
+inline sf::Color const startColor { 0, 0, 255 };
+inline sf::Color const endColor { 255, 0, 0 };
+
+namespace {
+sf::Color const& colorFromGradient(unsigned dist, unsigned maxDist)
+{
+    return colors[((colors.size() - 1) * dist) / maxDist];
+}
+}
+#endif

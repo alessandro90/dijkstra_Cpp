@@ -24,42 +24,50 @@ std::pair<unsigned, unsigned> getWindowSize(std::pair<unsigned, unsigned> square
     return { squares.first * edgeSizeWidth, squares.second * edgeSizeHeigh };
 }
 
-void drawSquare(gr::Vertex const& v, sf::RenderWindow& window, unsigned edgeWidth, unsigned edgeHeight)
+sf::RectangleShape& getRectangle(gr::Vertex const& v, unsigned edgeWidth, unsigned edgeHeight)
 {
-    static std::size_t maxDistance { 0 };
+    constexpr static unsigned border { 2 };
 
-    sf::RectangleShape rectangle(sf::Vector2f(edgeWidth - 2, edgeHeight - 2));
+    static sf::RectangleShape rectangle(sf::Vector2f(edgeWidth - border, edgeHeight - border));
     rectangle.setOutlineThickness(1.f);
     rectangle.setOutlineColor(sf::Color(150, 150, 150));
     rectangle.setPosition(sf::Vector2f {
-        static_cast<float>(v.pos().y.value() * edgeWidth),
-        static_cast<float>(v.pos().x.value() * edgeHeight) });
-    sf::Color color { 100, 100, 100 };
+        static_cast<float>(v.pos().y.value() * edgeWidth + border / 2),
+        static_cast<float>(v.pos().x.value() * edgeHeight + border / 2) });
+    return rectangle;
+}
+
+void drawCell(gr::Vertex const& v, sf::RenderWindow& window, unsigned edgeWidth, unsigned edgeHeight)
+{
+    static unsigned maxDistance { 0 };
+
+    auto& rectangle = getRectangle(v, edgeWidth, edgeHeight);
+
     switch (v.type()) {
     case gr::pointEmpty:
+        rectangle.setFillColor(emptyColor);
         break;
     case gr::pointObstacle:
-        color = sf::Color { 0, 0, 0 };
+        rectangle.setFillColor(obstacleColor);
         break;
     case gr::pointBifurcation:
     case gr::pointShortest:
-        color = sf::Color { 179, 108, 255 };
+        rectangle.setFillColor(shortestColor);
         break;
     case gr::pointVisited:
-        maxDistance = std::max<std::size_t>(maxDistance, v.dist().value());
-        color = colors[static_cast<std::size_t>(((colors.size() - 1) * v.dist().value()) / maxDistance)];
+        maxDistance = std::max<unsigned>(maxDistance, v.dist().value());
+        rectangle.setFillColor(colorFromGradient(static_cast<unsigned>(v.dist().value()), maxDistance));
         break;
     case gr::pointFront:
-        color = sf::Color { 255, 182, 108 };
+        rectangle.setFillColor(frontColor);
         break;
     case gr::pointStart:
-        color = sf::Color { 0, 0, 255 };
+        rectangle.setFillColor(startColor);
         break;
     case gr::pointEnd:
-        color = sf::Color { 255, 0, 0 };
+        rectangle.setFillColor(endColor);
         break;
     }
-    rectangle.setFillColor(color);
     window.draw(rectangle);
 }
 
@@ -67,7 +75,7 @@ void drawGrid(auto const& nodes, sf::RenderWindow& window, unsigned edgeWidth, u
 {
     for (auto const& nodeRow : nodes)
         for (auto const& node : nodeRow)
-            drawSquare(node, window, edgeWidth, edgeHeight);
+            drawCell(node, window, edgeWidth, edgeHeight);
 }
 
 int main()
@@ -107,12 +115,14 @@ int main()
             if (event.type == sf::Event::Closed)
                 window.close();
         }
+        if (marked)
+            continue;
 
         if (clock.getElapsedTime().asMilliseconds() >= static_cast<int>(milli)) {
             clock.restart();
             if (!finished)
                 finished = djk.done();
-            if (finished && !marked) {
+            if (finished) {
                 marked = true;
                 djk.markShortestPaths();
             }
