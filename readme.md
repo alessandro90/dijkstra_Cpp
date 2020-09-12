@@ -12,13 +12,13 @@ The code uses some features of C++20 and is clearly overengineered. I wrote it j
 
 There are 2 files in the `text_files` folder:
 
-- _example.txt_ Is an example of level. `*` is an allowed point (the algorithm can visit it), `X` is an obstacle. `A` is the starting point and `B` is the destination point. The file can contain only these characters. Also, the level doesn't have to be rectangular (some rows can be longer/shorter than others).
+-   _example.txt_ Is an example of level. `*` is an allowed point (the algorithm can visit it), `X` is an obstacle. `A` is the starting point and `B` is the destination point. The file can contain only these characters. Also, the level doesn't have to be rectangular (some rows can be longer/shorter than others).
 
-- _config.txt_ A very basic configuration file:
-  - _edgeWidth_ Width (pixels) of each cell;
-  - _edgeHeight_ Height (pixels) of each cell;
-  - _maxFrameRate_ Each iteration will take **at least** this value in milliseconds;
-  - _graphPath_ File path to a level relative to the executable.
+-   _config.txt_ A very basic configuration file:
+    -   _edgeWidth_ Width (pixels) of each cell;
+    -   _edgeHeight_ Height (pixels) of each cell;
+    -   _maxFrameRate_ Each iteration will take **at least** this value in milliseconds;
+    -   _graphPath_ File path to a level relative to the executable.
 
 ## Compilation
 

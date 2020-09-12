@@ -11,7 +11,7 @@ public:
 
     [[nodiscard]] bool done();
 
-    void marKShortestPaths();
+    void markShortestPaths();
 
 private:
     void traverse(gr::Graph::VertexType const& v);

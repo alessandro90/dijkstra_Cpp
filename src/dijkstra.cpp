@@ -55,7 +55,7 @@ bool Dijkstra::done()
     return false;
 }
 
-void Dijkstra::marKShortestPaths()
+void Dijkstra::markShortestPaths()
 {
     if (!dst.has_value())
         return;

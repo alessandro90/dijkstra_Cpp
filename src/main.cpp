@@ -1,4 +1,5 @@
 #include "SFML/Graphics.hpp"
+#include "colors.hpp"
 #include "config_parser.hpp"
 #include "dijkstra.hpp"
 #include "graph.hpp"
@@ -25,6 +26,8 @@ std::pair<unsigned, unsigned> getWindowSize(std::pair<unsigned, unsigned> square
 
 void drawSquare(gr::Vertex const& v, sf::RenderWindow& window, unsigned edgeWidth, unsigned edgeHeight)
 {
+    static std::size_t maxDistance { 0 };
+
     sf::RectangleShape rectangle(sf::Vector2f(edgeWidth - 2, edgeHeight - 2));
     rectangle.setOutlineThickness(1.f);
     rectangle.setOutlineColor(sf::Color(150, 150, 150));
@@ -43,7 +46,8 @@ void drawSquare(gr::Vertex const& v, sf::RenderWindow& window, unsigned edgeWidt
         color = sf::Color { 179, 108, 255 };
         break;
     case gr::pointVisited:
-        color = sf::Color { 108, 255, 148 };
+        maxDistance = std::max<std::size_t>(maxDistance, v.dist().value());
+        color = colors[static_cast<std::size_t>(((colors.size() - 1) * v.dist().value()) / maxDistance)];
         break;
     case gr::pointFront:
         color = sf::Color { 255, 182, 108 };
@@ -110,7 +114,7 @@ int main()
                 finished = djk.done();
             if (finished && !marked) {
                 marked = true;
-                djk.marKShortestPaths();
+                djk.markShortestPaths();
             }
         }
 
