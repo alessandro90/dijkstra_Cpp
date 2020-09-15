@@ -85,6 +85,7 @@ public:
     [[nodiscard]] std::vector<std::vector<VertexType>>& nodes();
     void markAs(VertexType const& v, CharType);
     void loadFile(std::string_view fname);
+    void buildEmpty(unsigned sizeX, unsigned sizeY);
 
 private:
     std::vector<std::vector<VertexType>> vertex {};

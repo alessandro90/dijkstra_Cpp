@@ -1,10 +1,29 @@
 #include "dijkstra.hpp"
 #include <algorithm>
+#include <optional>
 
 Dijkstra::Dijkstra(gr::Graph& g)
-    : graph { g }
 {
-    auto& vertices = graph.nodes();
+    init(g);
+}
+
+void Dijkstra::loadGraph(gr::Graph& g)
+{
+    init(g);
+}
+
+void Dijkstra::reset()
+{
+    dst = std::nullopt;
+    unvisited.clear();
+    graph = nullptr;
+}
+
+void Dijkstra::init(gr::Graph& g)
+{
+    reset();
+    graph = &g;
+    auto& vertices = graph->nodes();
     for (auto& row : vertices) {
         if (auto it = std::find_if(
                 row.begin(),
@@ -24,9 +43,9 @@ bool Dijkstra::done()
 
     auto current = extractFirst();
     if (!current.isStart())
-        graph.markAs(current, gr::pointVisited);
+        graph->markAs(current, gr::pointVisited);
 
-    auto neighborhoods = graph.neighborhoods(current);
+    auto neighborhoods = graph->neighborhoods(current);
     for (auto nodeRef : neighborhoods) {
         auto& node = nodeRef.get();
 
@@ -43,9 +62,9 @@ bool Dijkstra::done()
             tentativeDist < node.dist()) {
             if (!node.distIsInfinite()) {
                 unvisited.erase(node);
-                graph.markAs(node, gr::pointVisited);
+                graph->markAs(node, gr::pointVisited);
             } else {
-                graph.markAs(node, gr::pointFront);
+                graph->markAs(node, gr::pointFront);
             }
             node.setDist(tentativeDist);
             unvisited.insert(node);
@@ -67,7 +86,7 @@ void Dijkstra::traverse(gr::Graph::VertexType const& v)
     if (v.isStart())
         return;
 
-    auto neigh = graph.neighborhoods(v);
+    auto neigh = graph->neighborhoods(v);
     auto nearest = std::min_element(neigh.begin(), neigh.end(),
         [](gr::Graph::VertexType const& va, gr::Graph::VertexType const& vb) {
             return va.dist() < vb.dist();
@@ -82,8 +101,8 @@ void Dijkstra::traverse(gr::Graph::VertexType const& v)
             continue;
         }
         if (nearest->get().pos() != node.pos())
-            graph.markAs(v, gr::pointBifurcation);
-        graph.markAs(node, gr::pointShortest);
+            graph->markAs(v, gr::pointBifurcation);
+        graph->markAs(node, gr::pointShortest);
         traverse(node);
     }
 }
@@ -92,7 +111,8 @@ bool Dijkstra::completed() const
 {
     return unvisited.empty()
         || unvisited.begin()->distIsInfinite()
-        || dst.has_value();
+        || dst.has_value()
+        || !graph;
 }
 
 gr::Graph::VertexType Dijkstra::extractFirst()

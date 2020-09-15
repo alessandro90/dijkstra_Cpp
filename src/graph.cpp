@@ -113,6 +113,25 @@ void Graph::loadFile(std::string_view fname)
     }
 }
 
+void Graph::buildEmpty(unsigned sizeX, unsigned sizeY)
+{
+    vertex.resize(sizeX);
+    int row {}, counter {};
+    for (auto& line : vertex) {
+        int col {};
+        line.reserve(sizeY);
+        for (unsigned i = 0; i < sizeY; ++i) {
+            line.emplace_back(counter, pointEmpty, Position { X { row }, Y { col } });
+            counter += 1;
+            col += 1;
+        }
+        row += 1;
+    }
+    vertex[0][0].setType(pointStart);
+    vertex[0][0].setDist(Distance { 0 });
+    vertex[0][1].setType(pointEnd);
+}
+
 Graph::VertexType* Graph::vertexPtr(Position const& mPos)
 {
     if (mPos.x.value() >= 0
