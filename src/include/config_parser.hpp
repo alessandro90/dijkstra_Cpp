@@ -1,14 +1,15 @@
 #include "io.hpp"
 #include <algorithm>
 #include <cctype>
+#include <string_view>
 #include <unordered_map>
 
 class ConfigParser {
 public:
     ConfigParser() = default;
-    void parse()
+    void parse(std::string_view fname)
     {
-        io::File file { "../text_files/config.txt" };
+        io::File file { fname };
         for (auto const& line : file) {
             std::string ln { line };
             ln.erase(

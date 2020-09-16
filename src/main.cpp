@@ -9,6 +9,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 
@@ -22,9 +23,9 @@ std::pair<unsigned, unsigned> getSquresNumber(gr::Graph& graph)
     return { width, height };
 }
 
-std::pair<unsigned, unsigned> getWindowSize(std::pair<unsigned, unsigned> squares, unsigned edgeSizeWidth, unsigned edgeSizeHeigh)
+std::pair<int, int> getWindowSize(std::pair<unsigned, unsigned> squares, unsigned edgeSizeWidth, unsigned edgeSizeHeigh)
 {
-    return { squares.first * edgeSizeWidth, squares.second * edgeSizeHeigh };
+    return { static_cast<int>(squares.first * edgeSizeWidth), static_cast<int>(squares.second * edgeSizeHeigh) };
 }
 
 sf::RectangleShape& getRectangle(gr::Vertex const& v, unsigned edgeWidth, unsigned edgeHeight)
@@ -85,31 +86,26 @@ auto getStartingConfiguration(int argc, char** argv)
 {
     (void)argv;
     gr::Graph graph {};
-    unsigned edgeWidth { 20 };
-    unsigned edgeHeight { 20 };
-    unsigned milli { 0 };
-    if (argc >= 2) {
-        graph.buildEmpty(50, 50);
-        if (argc == 2) {
-            edgeWidth = std::stoul(argv[1]);
-            edgeHeight = edgeWidth;
-        } else if (argc == 3) {
-            edgeWidth = std::stoul(argv[1]);
-            edgeHeight = std::stoul(argv[2]);
-        }
+    unsigned edgeWidth {};
+    unsigned edgeHeight {};
+    ConfigParser config {};
+    int milli {};
+    if (argc == 2 && std::string_view { argv[1] } == "-i") {
+        config.parse("../text_files/config_i.txt");
+        graph.buildEmpty(std::stoul(config.get("rows").data()),
+            std::stoul(config.get("cols").data()));
     } else {
-        ConfigParser config {};
-        config.parse();
+        config.parse("../text_files/config.txt");
         try {
             graph.loadFile(config.get("graphPath"));
         } catch (gr::InvalidGraphException const& e) {
             std::cerr << e.what() << '\n';
             throw;
         }
-        edgeWidth = std::stoul(config.get("edgeWidth").data());
-        edgeHeight = std::stoul(config.get("edgeHeight").data());
-        milli = std::stoul(config.get("maxFrameRate").data());
     }
+    edgeWidth = std::stoul(config.get("edgeWidth").data());
+    edgeHeight = std::stoul(config.get("edgeHeight").data());
+    milli = std::atoi(config.get("maxFrameRate").data());
     return std::tuple(graph, edgeWidth, edgeHeight, milli);
 }
 
@@ -214,6 +210,7 @@ void updateGraphInteractive(gr::Graph& graph, sf::Event const& event, Mouse& mou
         x = event.mouseMove.x;
         y = event.mouseMove.y;
     }
+
     auto const [xPos, yPos] = std::pair { static_cast<int>(y / edgeHeight), static_cast<int>(x / edgeWidth) };
     auto* vPtr = graph.vertexPtr(gr::Position { gr::X { xPos }, gr::Y { yPos } });
     mouse.handleEvent(event, *vPtr, graph);
@@ -224,10 +221,10 @@ int main(int argc, char** argv)
 
     auto [graph, edgeWidth, edgeHeight, milli] = getStartingConfiguration(argc, argv);
 
-    auto windowSize = getWindowSize(getSquresNumber(graph), edgeWidth, edgeHeight);
+    auto const [sizeX, sizeY] = getWindowSize(getSquresNumber(graph), edgeWidth, edgeHeight);
 
     sf::RenderWindow window {
-        sf::VideoMode { windowSize.first, windowSize.second },
+        sf::VideoMode { static_cast<unsigned>(sizeX), static_cast<unsigned>(sizeY) },
         "Dijkstra",
         sf::Style::Close
     };
@@ -265,13 +262,15 @@ int main(int argc, char** argv)
                 && (event.type == sf::Event::MouseButtonPressed
                     || event.type == sf::Event::MouseButtonReleased
                     || event.type == sf::Event::MouseMoved)) {
-                updateGraphInteractive(graph, event, mouse, edgeWidth, edgeHeight);
+                auto mousePos = sf::Mouse::getPosition(window);
+                if (mousePos.x >= 0 && mousePos.x <= sizeX && mousePos.y >= 0 && mousePos.y <= sizeY)
+                    updateGraphInteractive(graph, event, mouse, edgeWidth, edgeHeight);
             }
         }
 
         // Dijkstra propagation
         if (started && !marked) {
-            if (clock.getElapsedTime().asMilliseconds() >= static_cast<int>(milli)) {
+            if (clock.getElapsedTime().asMilliseconds() >= milli) {
                 clock.restart();
                 if (!finished) {
                     finished = djk.done();

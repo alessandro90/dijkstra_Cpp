@@ -1,0 +1,5 @@
+edgeWidth: 15
+edgeHeight: 15
+maxFrameRate: 0
+rows: 50
+cols: 100

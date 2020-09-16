@@ -5,6 +5,7 @@ dijkstra.exe
 !CMakeLists.txt
 !example.txt
 !config.txt
+!config_i.txt
 build
 *.bat
 *.sh
