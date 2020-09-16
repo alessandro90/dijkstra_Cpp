@@ -16,7 +16,7 @@ namespace gr {
 using X = num::Number<int, struct TypeX>;
 using Y = num::Number<int, struct TypeY>;
 using Distance = num::Number<double, struct Dist>;
-using CharType = unsigned char;
+enum CharType : unsigned char {};
 
 struct Position {
     X x;

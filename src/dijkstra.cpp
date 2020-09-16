@@ -100,7 +100,7 @@ void Dijkstra::traverse(gr::Graph::VertexType const& v)
             || node.isShortest()) {
             continue;
         }
-        if (nearest->get().pos() != node.pos())
+        if (nearest->get().pos() != node.pos() && !v.isEnd() && !v.isStart())
             graph->markAs(v, gr::pointBifurcation);
         graph->markAs(node, gr::pointShortest);
         traverse(node);

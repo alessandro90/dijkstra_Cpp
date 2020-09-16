@@ -141,9 +141,11 @@ private:
         switch (ver.type()) {
         case gr::pointStart:
         case gr::pointEnd:
-            if (event.type == sf::Event::MouseButtonPressed)
+            if (event.type == sf::Event::MouseButtonPressed
+                && event.mouseButton.button == sf::Mouse::Left) {
                 state = ver.isStart() ? State::GRABBED_START : State::GRABBED_END;
-            else if (event.type == sf::Event::MouseButtonReleased)
+                v = &ver;
+            } else if (event.type == sf::Event::MouseButtonReleased)
                 state = State::FREE;
             break;
         case gr::pointObstacle:
@@ -273,8 +275,9 @@ int main(int argc, char** argv)
                     || event.type == sf::Event::MouseButtonReleased
                     || event.type == sf::Event::MouseMoved)) {
                 auto mousePos = sf::Mouse::getPosition(window);
-                if (mousePos.x >= 0 && mousePos.x <= sizeX && mousePos.y >= 0 && mousePos.y <= sizeY)
+                if (mousePos.x >= 0 && mousePos.x <= sizeX - 1 && mousePos.y >= 0 && mousePos.y <= sizeY - 1) {
                     updateGraphInteractive(graph, event, mouse, cellSize);
+                }
             }
         }
 

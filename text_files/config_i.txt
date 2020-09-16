@@ -1,5 +1,5 @@
-edgeWidth: 10
-edgeHeight: 10
+edgeWidth: 15
+edgeHeight: 15
 maxFrameRate: 0
 rows: 25
 cols: 50

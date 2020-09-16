@@ -85,7 +85,7 @@ void Graph::loadFile(std::string_view fname)
         std::vector<Vertex> v;
         v.reserve(line.size());
         for (auto c : line) {
-            switch (c) {
+            switch (static_cast<CharType>(c)) {
             case pointStart:
                 if (foundStart)
                     throw InvalidGraphException {};
@@ -104,7 +104,7 @@ void Graph::loadFile(std::string_view fname)
                 throw InvalidGraphException {};
                 break;
             }
-            v.emplace_back(elementCount, c, Position { X { lineCount }, Y { colCount } });
+            v.emplace_back(elementCount, static_cast<CharType>(c), Position { X { lineCount }, Y { colCount } });
             colCount += 1;
             elementCount += 1;
         }
