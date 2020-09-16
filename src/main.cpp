@@ -13,6 +13,11 @@
 #include <tuple>
 #include <utility>
 
+struct CellSize {
+    unsigned width {};
+    unsigned height {};
+};
+
 std::pair<unsigned, unsigned> getSquresNumber(gr::Graph& graph)
 {
     auto const& nodes = graph.nodes();
@@ -23,29 +28,29 @@ std::pair<unsigned, unsigned> getSquresNumber(gr::Graph& graph)
     return { width, height };
 }
 
-std::pair<int, int> getWindowSize(std::pair<unsigned, unsigned> squares, unsigned edgeSizeWidth, unsigned edgeSizeHeigh)
+std::pair<int, int> getWindowSize(std::pair<unsigned, unsigned> squares, CellSize const& cellSize)
 {
-    return { static_cast<int>(squares.first * edgeSizeWidth), static_cast<int>(squares.second * edgeSizeHeigh) };
+    return { static_cast<int>(squares.first * cellSize.width), static_cast<int>(squares.second * cellSize.height) };
 }
 
-sf::RectangleShape& getRectangle(gr::Vertex const& v, unsigned edgeWidth, unsigned edgeHeight)
+sf::RectangleShape& getRectangle(gr::Vertex const& v, CellSize const& cellSize)
 {
     constexpr static unsigned border { 2 };
 
-    static sf::RectangleShape rectangle(sf::Vector2f(edgeWidth - border, edgeHeight - border));
+    static sf::RectangleShape rectangle(sf::Vector2f(cellSize.width - border, cellSize.height - border));
     rectangle.setOutlineThickness(1.f);
     rectangle.setOutlineColor(sf::Color(150, 150, 150));
     rectangle.setPosition(sf::Vector2f {
-        static_cast<float>(v.pos().y.value() * edgeWidth + border / 2),
-        static_cast<float>(v.pos().x.value() * edgeHeight + border / 2) });
+        static_cast<float>(v.pos().y.value() * cellSize.width + border / 2),
+        static_cast<float>(v.pos().x.value() * cellSize.height + border / 2) });
     return rectangle;
 }
 
-void drawCell(gr::Vertex const& v, sf::RenderWindow& window, unsigned edgeWidth, unsigned edgeHeight)
+void drawCell(gr::Vertex const& v, sf::RenderWindow& window, CellSize const& cellSize)
 {
     static unsigned maxDistance { 0 };
 
-    auto& rectangle = getRectangle(v, edgeWidth, edgeHeight);
+    auto& rectangle = getRectangle(v, cellSize);
 
     switch (v.type()) {
     case gr::pointEmpty:
@@ -75,19 +80,18 @@ void drawCell(gr::Vertex const& v, sf::RenderWindow& window, unsigned edgeWidth,
     window.draw(rectangle);
 }
 
-void drawGrid(auto const& nodes, sf::RenderWindow& window, unsigned edgeWidth, unsigned edgeHeight)
+void drawGrid(auto const& nodes, sf::RenderWindow& window, CellSize const& cellSize)
 {
     for (auto const& nodeRow : nodes)
         for (auto const& node : nodeRow)
-            drawCell(node, window, edgeWidth, edgeHeight);
+            drawCell(node, window, cellSize);
 }
 
 auto getStartingConfiguration(int argc, char** argv)
 {
     (void)argv;
     gr::Graph graph {};
-    unsigned edgeWidth {};
-    unsigned edgeHeight {};
+    CellSize cellSize {};
     ConfigParser config {};
     int milli {};
     if (argc == 2 && std::string_view { argv[1] } == "-i") {
@@ -103,13 +107,13 @@ auto getStartingConfiguration(int argc, char** argv)
             throw;
         }
     }
-    edgeWidth = std::stoul(config.get("edgeWidth").data());
-    edgeHeight = std::stoul(config.get("edgeHeight").data());
+    cellSize.width = std::stoul(config.get("edgeWidth").data());
+    cellSize.height = std::stoul(config.get("edgeHeight").data());
     milli = std::atoi(config.get("maxFrameRate").data());
-    return std::tuple(graph, edgeWidth, edgeHeight, milli);
+    return std::tuple(graph, cellSize, milli);
 }
 
-class Mouse {
+class MouseEventHandler {
 public:
     void handleEvent(sf::Event const& event, gr::Vertex& ver)
     {
@@ -200,7 +204,7 @@ private:
     gr::Vertex* v { nullptr };
 };
 
-void updateGraphInteractive(gr::Graph& graph, sf::Event const& event, Mouse& mouse, unsigned edgeWidth, unsigned edgeHeight)
+void updateGraphInteractive(gr::Graph& graph, sf::Event const& event, MouseEventHandler& mouse, CellSize const& cellSize)
 {
     if (event.type == sf::Event::MouseMoved
         && !sf::Mouse::isButtonPressed(sf::Mouse::Left)
@@ -216,7 +220,8 @@ void updateGraphInteractive(gr::Graph& graph, sf::Event const& event, Mouse& mou
         y = event.mouseMove.y;
     }
 
-    auto const [xPos, yPos] = std::pair { static_cast<int>(y / edgeHeight), static_cast<int>(x / edgeWidth) };
+    auto const [xPos, yPos] = std::pair { static_cast<int>(y / cellSize.height),
+        static_cast<int>(x / cellSize.width) };
     auto* vPtr = graph.vertexPtr(gr::Position { gr::X { xPos }, gr::Y { yPos } });
     mouse.handleEvent(event, *vPtr);
 }
@@ -224,9 +229,9 @@ void updateGraphInteractive(gr::Graph& graph, sf::Event const& event, Mouse& mou
 int main(int argc, char** argv)
 {
 
-    auto [graph, edgeWidth, edgeHeight, milli] = getStartingConfiguration(argc, argv);
+    auto [graph, cellSize, milli] = getStartingConfiguration(argc, argv);
 
-    auto const [sizeX, sizeY] = getWindowSize(getSquresNumber(graph), edgeWidth, edgeHeight);
+    auto const [sizeX, sizeY] = getWindowSize(getSquresNumber(graph), cellSize);
 
     sf::RenderWindow window {
         sf::VideoMode { static_cast<unsigned>(sizeX), static_cast<unsigned>(sizeY) },
@@ -237,7 +242,7 @@ int main(int argc, char** argv)
     bool started { false };
     bool finished { false };
     bool marked { false };
-    Mouse mouse {};
+    MouseEventHandler mouse {};
     Dijkstra djk {};
     sf::Clock clock {};
 
@@ -269,7 +274,7 @@ int main(int argc, char** argv)
                     || event.type == sf::Event::MouseMoved)) {
                 auto mousePos = sf::Mouse::getPosition(window);
                 if (mousePos.x >= 0 && mousePos.x <= sizeX && mousePos.y >= 0 && mousePos.y <= sizeY)
-                    updateGraphInteractive(graph, event, mouse, edgeWidth, edgeHeight);
+                    updateGraphInteractive(graph, event, mouse, cellSize);
             }
         }
 
@@ -287,7 +292,7 @@ int main(int argc, char** argv)
             }
         }
 
-        drawGrid(graph.nodes(), window, edgeWidth, edgeHeight);
+        drawGrid(graph.nodes(), window, cellSize);
 
         window.display();
     }
