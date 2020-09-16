@@ -111,15 +111,15 @@ auto getStartingConfiguration(int argc, char** argv)
 
 class Mouse {
 public:
-    void handleEvent(sf::Event const& event, gr::Vertex& v, gr::Graph& graph)
+    void handleEvent(sf::Event const& event, gr::Vertex& ver)
     {
         switch (event.type) {
         case sf::Event::MouseButtonPressed:
         case sf::Event::MouseButtonReleased:
-            handleButtonEvent(event, v);
+            handleButtonEvent(event, ver);
             break;
         case sf::Event::MouseMoved:
-            handleMoveEvent(event, v, graph);
+            handleMoveEvent(event, ver);
             break;
         default:
             break;
@@ -132,58 +132,63 @@ private:
         GRABBED_END,
         FREE,
     };
-    void handleButtonEvent(sf::Event const& event, gr::Vertex& v)
+    void handleButtonEvent(sf::Event const& event, gr::Vertex& ver)
     {
-        switch (v.type()) {
+        switch (ver.type()) {
         case gr::pointStart:
         case gr::pointEnd:
             if (event.type == sf::Event::MouseButtonPressed)
-                state = v.isStart() ? State::GRABBED_START : State::GRABBED_END;
+                state = ver.isStart() ? State::GRABBED_START : State::GRABBED_END;
             else if (event.type == sf::Event::MouseButtonReleased)
                 state = State::FREE;
             break;
         case gr::pointObstacle:
             if (event.mouseButton.button == sf::Mouse::Right
                 && event.type == sf::Event::MouseButtonPressed)
-                v.setType(gr::pointEmpty);
+                ver.setType(gr::pointEmpty);
             break;
         case gr::pointEmpty:
             if (event.mouseButton.button == sf::Mouse::Left
                 && event.type == sf::Event::MouseButtonPressed)
-                v.setType(gr::pointObstacle);
+                ver.setType(gr::pointObstacle);
             break;
         default:
             break;
         }
     }
 
-    void handleMoveEvent(sf::Event const& event, gr::Vertex& v, gr::Graph& graph)
+    void handleMoveEvent(sf::Event const& event, gr::Vertex& ver)
     {
         (void)event;
-        switch (v.type()) {
+        switch (ver.type()) {
         case gr::pointStart:
+            if (state != State::GRABBED_END)
+                v = &ver;
+            break;
         case gr::pointEnd:
-            pos = v.pos();
+            if (state != State::GRABBED_START)
+                v = &ver;
             break;
         case gr::pointObstacle:
-            if (state == State::FREE && sf::Mouse::isButtonPressed(sf::Mouse::Right))
-                v.setType(gr::pointEmpty);
-            state = State::FREE;
+            if (state == State::FREE && sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
+                ver.setType(gr::pointEmpty);
+                state = State::FREE;
+            }
             break;
         case gr::pointEmpty:
             if (state == State::FREE && sf::Mouse::isButtonPressed(sf::Mouse::Left))
-                v.setType(gr::pointObstacle);
+                ver.setType(gr::pointObstacle);
             else if (state == State::GRABBED_START) {
-                graph.markAs(*graph.vertexPtr(pos), gr::pointEmpty);
-                graph.vertexPtr(pos)->setDist(gr::infinite);
-                pos = v.pos();
-                v.setType(gr::pointStart);
-                v.setDist(gr::Distance { 0 });
+                v->setType(gr::pointEmpty);
+                v->setDist(gr::infinite);
+                v = &ver;
+                v->setType(gr::pointStart);
+                v->setDist(gr::Distance { 0 });
             } else if (state == State::GRABBED_END) {
-                graph.markAs(*graph.vertexPtr(pos), gr::pointEmpty);
-                pos = v.pos();
-                v.setType(gr::pointEnd);
-                v.setDist(gr::infinite);
+                v->setType(gr::pointEmpty);
+                v = &ver;
+                v->setType(gr::pointEnd);
+                v->setDist(gr::infinite);
             }
             break;
         default:
@@ -192,7 +197,7 @@ private:
     }
 
     State state { State::FREE };
-    gr::Position pos {};
+    gr::Vertex* v { nullptr };
 };
 
 void updateGraphInteractive(gr::Graph& graph, sf::Event const& event, Mouse& mouse, unsigned edgeWidth, unsigned edgeHeight)
@@ -213,7 +218,7 @@ void updateGraphInteractive(gr::Graph& graph, sf::Event const& event, Mouse& mou
 
     auto const [xPos, yPos] = std::pair { static_cast<int>(y / edgeHeight), static_cast<int>(x / edgeWidth) };
     auto* vPtr = graph.vertexPtr(gr::Position { gr::X { xPos }, gr::Y { yPos } });
-    mouse.handleEvent(event, *vPtr, graph);
+    mouse.handleEvent(event, *vPtr);
 }
 
 int main(int argc, char** argv)
