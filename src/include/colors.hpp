@@ -47,9 +47,9 @@
 //     sf::Color { 48, 47, 242 }
 // };
 
-inline sf::Color const emptyColor { 100, 100, 100 };
+inline sf::Color const emptyColor { 250, 250, 250 };
 inline sf::Color const obstacleColor { 0, 0, 0 };
-inline sf::Color const shortestColor { 179, 108, 255 };
+inline sf::Color const shortestColor { 157, 60, 249 };
 inline sf::Color const frontColor { 255, 182, 108 };
 inline sf::Color const startColor { 0, 0, 255 };
 inline sf::Color const endColor { 255, 0, 0 };
