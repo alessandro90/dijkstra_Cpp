@@ -18,6 +18,24 @@ struct CellSize {
     unsigned const height {};
 };
 
+struct MousePos {
+    int const x {};
+    int const y {};
+};
+
+MousePos getMousePos(sf::Event const& event)
+{
+    switch (event.type) {
+    case sf::Event::MouseButtonPressed:
+    case sf::Event::MouseButtonReleased:
+        return { event.mouseButton.x, event.mouseButton.y };
+    case sf::Event::MouseMoved:
+        return { event.mouseMove.x, event.mouseMove.y };
+    default:
+        return {};
+    }
+}
+
 std::pair<unsigned, unsigned> getSquresNumber(gr::Graph& graph)
 {
     auto const& nodes = graph.nodes();
@@ -207,35 +225,26 @@ private:
     gr::Vertex* v { nullptr };
 };
 
-void updateGraphInteractive(gr::Graph& graph, sf::Event const& event, MouseEventHandler& mouse, CellSize const& cellSize)
+void updateGraphInteractive(gr::Graph& graph, sf::Event const& event, MouseEventHandler& mouse, CellSize const& cellSize, MousePos const& mPos)
 {
     if (event.type == sf::Event::MouseMoved
         && !sf::Mouse::isButtonPressed(sf::Mouse::Left)
         && !sf::Mouse::isButtonPressed(sf::Mouse::Right))
         return;
 
-    int x {}, y {};
-    if (event.type == sf::Event::MouseButtonPressed || event.type == sf::Event::MouseButtonReleased) {
-        x = event.mouseButton.x;
-        y = event.mouseButton.y;
-    } else if (event.type == sf::Event::MouseMoved) {
-        x = event.mouseMove.x;
-        y = event.mouseMove.y;
-    }
-
-    auto const [xPos, yPos] = std::pair { static_cast<int>(y / cellSize.height),
-        static_cast<int>(x / cellSize.width) };
+    auto const [xPos, yPos] = std::pair {
+        static_cast<int>(mPos.y / cellSize.height),
+        static_cast<int>(mPos.x / cellSize.width)
+    };
     auto* vPtr = graph.vertexPtr(gr::Position { gr::X { xPos }, gr::Y { yPos } });
     mouse.handleEvent(event, *vPtr);
 }
 
 int main(int argc, char** argv)
 {
-
     auto [graph, cellSize, milli] = getStartingConfiguration(argc, argv);
 
     auto const [sizeX, sizeY] = getWindowSize(getSquresNumber(graph), cellSize);
-
     sf::RenderWindow window {
         sf::VideoMode { static_cast<unsigned>(sizeX), static_cast<unsigned>(sizeY) },
         "Dijkstra",
@@ -275,9 +284,9 @@ int main(int argc, char** argv)
                 && (event.type == sf::Event::MouseButtonPressed
                     || event.type == sf::Event::MouseButtonReleased
                     || event.type == sf::Event::MouseMoved)) {
-                auto mousePos = sf::Mouse::getPosition(window);
-                if (mousePos.x >= 0 && mousePos.x <= sizeX - 1 && mousePos.y >= 0 && mousePos.y <= sizeY - 1) {
-                    updateGraphInteractive(graph, event, mouse, cellSize);
+                if (MousePos mPos = getMousePos(event);
+                    mPos.x >= 0 && mPos.x <= sizeX - 1 && mPos.y >= 0 && mPos.y <= sizeY - 1) {
+                    updateGraphInteractive(graph, event, mouse, cellSize, mPos);
                 }
             }
         }
