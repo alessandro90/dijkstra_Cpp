@@ -14,8 +14,8 @@
 #include <utility>
 
 struct CellSize {
-    unsigned width {};
-    unsigned height {};
+    unsigned const width {};
+    unsigned const height {};
 };
 
 std::pair<unsigned, unsigned> getSquresNumber(gr::Graph& graph)
@@ -91,7 +91,6 @@ auto getStartingConfiguration(int argc, char** argv)
 {
     (void)argv;
     gr::Graph graph {};
-    CellSize cellSize {};
     ConfigParser config {};
     int milli {};
     if (argc == 2 && std::string_view { argv[1] } == "-i") {
@@ -107,8 +106,10 @@ auto getStartingConfiguration(int argc, char** argv)
             throw;
         }
     }
-    cellSize.width = std::stoul(config.get("edgeWidth").data());
-    cellSize.height = std::stoul(config.get("edgeHeight").data());
+    CellSize cellSize {
+        std::stoul(config.get("edgeWidth").data()),
+        std::stoul(config.get("edgeHeight").data())
+    };
     milli = std::atoi(config.get("maxFrameRate").data());
     return std::tuple(graph, cellSize, milli);
 }
