@@ -171,11 +171,13 @@ private:
             if (event.mouseButton.button == sf::Mouse::Right
                 && event.type == sf::Event::MouseButtonPressed)
                 ver.setType(gr::pointEmpty);
+            state = State::FREE;
             break;
         case gr::pointEmpty:
             if (event.mouseButton.button == sf::Mouse::Left
                 && event.type == sf::Event::MouseButtonPressed)
                 ver.setType(gr::pointObstacle);
+            state = State::FREE;
             break;
         default:
             break;
