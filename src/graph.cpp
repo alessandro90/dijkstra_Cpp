@@ -59,7 +59,35 @@ bool Vertex::isShortest() const
     return type() == pointShortest || type() == pointBifurcation;
 }
 
-bool Vertex::isValid() const { return type() != pointObstacle; }
+bool Vertex::isValid(Vertex const& v, Graph& graph) const
+{
+    if (type() == pointObstacle)
+        return false;
+
+    if (auto diff = v.pos() - pos(); diff.x.value() == 0 || diff.y.value() == 0)
+        return true;
+
+    auto minXVertex = std::min(v, *this, [](Vertex const& a, Vertex const& b) {
+        return a.pos().x < b.pos().x;
+    });
+    auto minYVertex = std::min(v, *this, [](Vertex const& a, Vertex const& b) {
+        return a.pos().y < b.pos().y;
+    });
+
+    auto const validDiagonal = [](Vertex const* a, Vertex const* b) {
+        return a != nullptr && b != nullptr && a->type() != pointObstacle && b->type() != pointObstacle;
+    };
+
+    if (minXVertex == minYVertex) {
+        Vertex const* a = graph.vertexPtr(minXVertex.pos() + Position { X { 1 }, Y { 0 } });
+        Vertex const* b = graph.vertexPtr(minXVertex.pos() + Position { X { 0 }, Y { 1 } });
+        return validDiagonal(a, b);
+    }
+
+    Vertex const* a = graph.vertexPtr(minXVertex.pos() + Position { X { 0 }, Y { -1 } });
+    Vertex const* b = graph.vertexPtr(minXVertex.pos() + Position { X { 1 }, Y { 0 } });
+    return validDiagonal(a, b);
+}
 
 Distance const& Vertex::dist() const { return mDist; }
 
@@ -160,7 +188,7 @@ std::vector<std::reference_wrapper<Graph::VertexType>> Graph::neighborhoods(Grap
 
     for (auto const& pos : coords) {
         if (auto ptr = vertexPtr({ v.pos() - pos });
-            ptr != nullptr && ptr->isValid())
+            ptr != nullptr && ptr->isValid(v, *this))
             neigh.push_back(*ptr);
     }
     return neigh;

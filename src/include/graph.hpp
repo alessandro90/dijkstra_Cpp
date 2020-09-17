@@ -40,6 +40,8 @@ inline constexpr CharType pointStart { 'A' };
 inline constexpr CharType pointEnd { 'B' };
 inline constexpr Distance infinite { std::numeric_limits<typename Distance::value_type>::max() };
 
+class Graph;
+
 struct Vertex {
 public:
     using UniqueIdType = int;
@@ -51,7 +53,7 @@ public:
     [[nodiscard]] bool isStart() const;
     [[nodiscard]] bool isEnd() const;
     [[nodiscard]] bool isShortest() const;
-    [[nodiscard]] bool isValid() const;
+    [[nodiscard]] bool isValid(Vertex const& v, Graph& graph) const;
     [[nodiscard]] CharType type() const;
     [[nodiscard]] Distance const& dist() const;
     [[nodiscard]] bool distIsInfinite() const;
