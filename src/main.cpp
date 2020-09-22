@@ -30,7 +30,7 @@ MousePos getMousePos(sf::Event const& event)
     case sf::Event::MouseButtonReleased:
         return { event.mouseButton.x, event.mouseButton.y };
     case sf::Event::MouseMoved:
-        return { event.mouseMove.x, event.mouseMove.y };
+        return { .x = event.mouseMove.x, .y = event.mouseMove.y };
     default:
         return {};
     }
@@ -125,8 +125,8 @@ auto getStartingConfiguration(int argc, char** argv)
         }
     }
     CellSize cellSize {
-        std::stoul(config.get("edgeWidth").data()),
-        std::stoul(config.get("edgeHeight").data())
+        .width = std::stoul(config.get("edgeWidth").data()),
+        .height = std::stoul(config.get("edgeHeight").data())
     };
     milli = std::atoi(config.get("maxFrameRate").data());
     return std::tuple(graph, cellSize, milli);
