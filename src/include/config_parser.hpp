@@ -4,6 +4,7 @@
 #include <string_view>
 #include <unordered_map>
 
+// Its a small class. Leave in header only
 class ConfigParser {
 public:
     ConfigParser() = default;

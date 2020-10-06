@@ -59,6 +59,7 @@ public:
     [[nodiscard]] bool distIsInfinite() const;
     [[nodiscard]] auto operator<=>(Vertex const& v) const = default;
     [[nodiscard]] UniqueIdType id() const;
+    void reset();
 
 private:
     Distance mDist { infinite };
@@ -86,8 +87,9 @@ public:
     [[nodiscard]] std::string stringify() const;
     [[nodiscard]] std::vector<std::vector<VertexType>>& nodes();
     void markAs(VertexType const& v, CharType);
-    void loadFile(std::string_view fname);
+    void fromFile(std::string_view fname);
     void buildEmpty(unsigned sizeX, unsigned sizeY);
+    void reset();
 
 private:
     std::vector<std::vector<VertexType>> vertex {};

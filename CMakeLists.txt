@@ -7,7 +7,11 @@ set(SOURCES
     src/main.cpp
     src/graph.cpp
     src/dijkstra.cpp
-    src/io.cpp)
+    src/io.cpp
+    src/settings.cpp
+    src/draw.cpp
+    src/mouse_event_handler.cpp
+    src/app.cpp)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

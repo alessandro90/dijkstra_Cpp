@@ -101,7 +101,15 @@ Vertex::UniqueIdType Vertex::id() const { return uniqueId; }
 
 Position const& Vertex::pos() const { return mPos; }
 
-void Graph::loadFile(std::string_view fname)
+void Vertex::reset()
+{
+    if (type() != pointStart && type() != pointEnd) {
+        setDist(infinite);
+        setType(pointEmpty);
+    }
+}
+
+void Graph::fromFile(std::string_view fname)
 {
     io::File f { fname, io::in };
     VertexType::UniqueIdType elementCount { 0 };
@@ -214,6 +222,15 @@ std::string Graph::stringify() const
         s += '\n';
     }
     return s;
+}
+
+void Graph::reset()
+{
+    for (auto& row : vertex) {
+        for (auto& v : row) {
+            v.reset();
+        }
+    }
 }
 
 std::ostream& operator<<(std::ostream& os, Graph const& lvl)
