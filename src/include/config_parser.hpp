@@ -3,6 +3,7 @@
 #include <cctype>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 
 // Its a small class. Leave in header only
 class ConfigParser {
@@ -13,10 +14,7 @@ public:
         io::File file { fname };
         for (auto const& line : file) {
             std::string ln { line };
-            ln.erase(
-                std::remove_if(ln.begin(), ln.end(),
-                    [](auto const& c) { return std::isspace(c); }),
-                ln.end());
+            std::erase_if(ln, [](auto const& c) { return std::isspace(c); });
             auto pos = ln.find(':');
             config[ln.substr(0, pos)] = ln.substr(pos + 1);
         }
