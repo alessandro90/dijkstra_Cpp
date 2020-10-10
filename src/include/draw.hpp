@@ -6,6 +6,6 @@
 #include "settings.hpp"
 #include <vector>
 
-void drawGrid(std::vector<std::vector<gr::Graph::VertexType>> const& nodes, sf::RenderWindow& window, CellSize const& cellSize);
+void drawGrid(gr::Graph const& graph, sf::RenderWindow& window, CellSize const& cellSize);
 
 #endif

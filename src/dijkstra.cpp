@@ -67,6 +67,7 @@ bool Dijkstra::done()
                 graph->markAs(node, gr::pointFront);
             }
             node.setDist(tentativeDist);
+            graph->updateMaxDistance(tentativeDist);
             unvisited.insert(node);
         }
     }

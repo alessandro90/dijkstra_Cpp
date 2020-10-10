@@ -23,10 +23,8 @@ sf::RectangleShape& getRectangle(gr::Vertex const& v, CellSize const& cellSize)
     return rectangle;
 }
 
-void drawCell(gr::Vertex const& v, sf::RenderWindow& window, CellSize const& cellSize)
+void drawCell(gr::Vertex const& v, sf::RenderWindow& window, CellSize const& cellSize, gr::Distance maxDistance)
 {
-    static unsigned maxDistance { 0 };
-
     auto& rectangle = getRectangle(v, cellSize);
 
     switch (v.type()) {
@@ -41,8 +39,7 @@ void drawCell(gr::Vertex const& v, sf::RenderWindow& window, CellSize const& cel
         rectangle.setFillColor(shortestColor);
         break;
     case gr::pointVisited:
-        maxDistance = std::max<unsigned>(maxDistance, v.dist().value());
-        rectangle.setFillColor(colorFromGradient(static_cast<unsigned>(v.dist().value()), maxDistance));
+        rectangle.setFillColor(colorFromGradient(v.dist().value(), maxDistance.value()));
         break;
     case gr::pointFront:
         rectangle.setFillColor(frontColor);
@@ -59,11 +56,11 @@ void drawCell(gr::Vertex const& v, sf::RenderWindow& window, CellSize const& cel
 
 }
 
-void drawGrid(std::vector<std::vector<gr::Graph::VertexType>> const& nodes, sf::RenderWindow& window, CellSize const& cellSize)
+void drawGrid(gr::Graph const& graph, sf::RenderWindow& window, CellSize const& cellSize)
 {
-    for (auto const& nodeRow : nodes)
+    for (auto const& nodeRow : graph.nodes())
         for (auto const& node : nodeRow)
-            drawCell(node, window, cellSize);
+            drawCell(node, window, cellSize, graph.getMaxDistance());
 }
 
 #endif

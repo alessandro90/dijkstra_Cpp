@@ -203,6 +203,7 @@ std::vector<std::reference_wrapper<Graph::VertexType>> Graph::neighborhoods(Grap
 }
 
 std::vector<std::vector<Graph::VertexType>>& Graph::nodes() { return vertex; }
+std::vector<std::vector<Graph::VertexType>> const& Graph::nodes() const { return vertex; }
 
 void Graph::markAs(Graph::VertexType const& v, CharType pointType)
 {
@@ -231,6 +232,17 @@ void Graph::reset()
             v.reset();
         }
     }
+    maxDistance = Distance { 0 };
+}
+
+void Graph::updateMaxDistance(Distance newDisatnce)
+{
+    if (newDisatnce > maxDistance)
+        maxDistance = newDisatnce;
+}
+Distance Graph::getMaxDistance() const
+{
+    return maxDistance;
 }
 
 std::ostream& operator<<(std::ostream& os, Graph const& lvl)

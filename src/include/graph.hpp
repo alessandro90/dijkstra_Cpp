@@ -86,13 +86,17 @@ public:
     [[nodiscard]] std::vector<std::reference_wrapper<VertexType>> neighborhoods(VertexType const& v);
     [[nodiscard]] std::string stringify() const;
     [[nodiscard]] std::vector<std::vector<VertexType>>& nodes();
+    [[nodiscard]] std::vector<std::vector<VertexType>> const& nodes() const;
     void markAs(VertexType const& v, CharType);
     void fromFile(std::string_view fname);
     void buildEmpty(unsigned sizeX, unsigned sizeY);
     void reset();
+    void updateMaxDistance(Distance newDistance);
+    Distance getMaxDistance() const;
 
 private:
     std::vector<std::vector<VertexType>> vertex {};
+    Distance maxDistance {};
 };
 
 std::ostream& operator<<(std::ostream& os, Graph const& lvl);

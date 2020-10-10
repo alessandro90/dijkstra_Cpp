@@ -95,7 +95,7 @@ void App::run()
             currentAction->poll(event);
         }
         currentAction->perform(event);
-        drawGrid(graph.nodes(), window, settings.cellSize);
+        drawGrid(graph, window, settings.cellSize);
         window.display();
     }
 }
