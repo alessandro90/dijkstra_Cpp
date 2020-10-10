@@ -6,6 +6,8 @@
 #include "colors.hpp"
 #include "graph.hpp"
 #include "settings.hpp"
+#include <algorithm>
+#include <ranges>
 #include <vector>
 
 namespace {
@@ -58,9 +60,9 @@ void drawCell(gr::Vertex const& v, sf::RenderWindow& window, CellSize const& cel
 
 void drawGrid(gr::Graph const& graph, sf::RenderWindow& window, CellSize const& cellSize)
 {
-    for (auto const& nodeRow : graph.nodes())
-        for (auto const& node : nodeRow)
-            drawCell(node, window, cellSize, graph.getMaxDistance());
+    std::ranges::for_each(graph.nodes() | std::ranges::views::join, [&](auto const& node) {
+        drawCell(node, window, cellSize, graph.getMaxDistance());
+    });
 }
 
 #endif

@@ -6,6 +6,7 @@
 #include <compare>
 #include <functional>
 #include <ostream>
+#include <ranges>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -227,11 +228,7 @@ std::string Graph::stringify() const
 
 void Graph::reset()
 {
-    for (auto& row : vertex) {
-        for (auto& v : row) {
-            v.reset();
-        }
-    }
+    std::ranges::for_each(vertex | std::ranges::views::join, [](auto& item) { item.reset(); });
     maxDistance = Distance { 0 };
 }
 
