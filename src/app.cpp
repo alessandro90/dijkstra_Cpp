@@ -80,8 +80,8 @@ App::App(Settings&& settings_, sf::RenderWindow& window_)
     , window { window_ }
 {
     if (std::holds_alternative<Grid>(settings.grid)) {
-        Grid const grid = std::get<Grid>(settings.grid);
-        graph.buildEmpty(grid.rows, grid.cols);
+        auto const& [rows, cols] = std::get<Grid>(settings.grid);
+        graph.buildEmpty(rows, cols);
     } else {
         graph.fromFile(std::get<std::string>(settings.grid));
     }
