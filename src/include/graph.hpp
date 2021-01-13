@@ -2,11 +2,11 @@
 #define GRAPH_H
 
 #include "number.hpp"
+#include "optional_pointer.hpp"
 #include <compare>
 #include <exception>
 #include <functional>
 #include <limits>
-#include <optional>
 #include <ostream>
 #include <string_view>
 #include <utility>
@@ -83,7 +83,7 @@ public:
     using VertexType = Vertex;
     inline static constexpr unsigned closests { 8 };
 
-    [[nodiscard]] std::optional<VertexType*> vertexPtr(Position const& pos);
+    [[nodiscard]] OptionalPointer<VertexType> vertexPtr(Position const& pos);
     [[nodiscard]] std::vector<std::reference_wrapper<VertexType>> neighborhoods(VertexType const& v);
     [[nodiscard]] std::string stringify() const;
     [[nodiscard]] std::vector<std::vector<VertexType>>& nodes();

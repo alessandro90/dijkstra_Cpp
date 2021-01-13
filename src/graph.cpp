@@ -1,12 +1,12 @@
 #include "graph.hpp"
 #include "io.hpp"
+#include "optional_pointer.hpp"
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <compare>
 #include <functional>
 #include <iterator>
-#include <optional>
 #include <ostream>
 #include <ranges>
 #include <sstream>
@@ -77,18 +77,18 @@ bool Vertex::isValid(Vertex const& v, Graph& graph) const
         return a.pos().y < b.pos().y;
     });
 
-    auto const validDiagonal = [](std::optional<Vertex*> const& a, std::optional<Vertex*> const& b) {
-        return a.has_value() && b.has_value() && (*a)->type() != pointObstacle && (*b)->type() != pointObstacle;
+    auto const validDiagonal = [](OptionalPointer<Vertex> const& a, OptionalPointer<Vertex> const& b) {
+        return a && b && a->type() != pointObstacle && b->type() != pointObstacle;
     };
 
     if (minXVertex == minYVertex) {
-        std::optional<Vertex*> const a = graph.vertexPtr(minXVertex.pos() + Position { X { 1 }, Y { 0 } });
-        std::optional<Vertex*> const b = graph.vertexPtr(minXVertex.pos() + Position { X { 0 }, Y { 1 } });
+        OptionalPointer<Vertex> const a = graph.vertexPtr(minXVertex.pos() + Position { X { 1 }, Y { 0 } });
+        OptionalPointer<Vertex> const b = graph.vertexPtr(minXVertex.pos() + Position { X { 0 }, Y { 1 } });
         return validDiagonal(a, b);
     }
 
-    std::optional<Vertex*> const a = graph.vertexPtr(minXVertex.pos() + Position { X { 0 }, Y { -1 } });
-    std::optional<Vertex*> const b = graph.vertexPtr(minXVertex.pos() + Position { X { 1 }, Y { 0 } });
+    OptionalPointer<Vertex> const a = graph.vertexPtr(minXVertex.pos() + Position { X { 0 }, Y { -1 } });
+    OptionalPointer<Vertex> const b = graph.vertexPtr(minXVertex.pos() + Position { X { 1 }, Y { 0 } });
     return validDiagonal(a, b);
 }
 
@@ -171,7 +171,7 @@ void Graph::buildEmpty(unsigned sizeX, unsigned sizeY)
     vertex[0][1].setType(pointEnd);
 }
 
-std::optional<Graph::VertexType*> Graph::vertexPtr(Position const& mPos)
+OptionalPointer<Graph::VertexType> Graph::vertexPtr(Position const& mPos)
 {
     if (mPos.x.value() >= 0
         && mPos.y.value() >= 0
@@ -196,10 +196,10 @@ std::vector<std::reference_wrapper<Graph::VertexType>> Graph::neighborhoods(Grap
 
     auto view = std::ranges::views::transform(coords, [&](Position const& pos) {
         return vertexPtr({ v.pos() - pos });
-    }) | std::ranges::views::filter([&](std::optional<Graph::VertexType*> ptr) {
-        return ptr.has_value() && (*ptr)->isValid(v, *this);
-    }) | std::ranges::views::transform([](std::optional<Graph::VertexType*> ptr) {
-        return std::ref(*(ptr.value()));
+    }) | std::ranges::views::filter([&](OptionalPointer<Graph::VertexType> ptr) {
+        return ptr && ptr->isValid(v, *this);
+    }) | std::ranges::views::transform([](OptionalPointer<Graph::VertexType> ptr) {
+        return std::ref(*ptr);
     });
 
     return { std::begin(view), std::end(view) };

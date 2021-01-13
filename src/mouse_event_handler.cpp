@@ -115,6 +115,6 @@ void updateMouseEventHandler(MouseEventHandler& mouseEventHandler, Settings cons
             static_cast<int>(mPos.y / settings.cellSize.height),
             static_cast<int>(mPos.x / settings.cellSize.width)
         };
-        mouseEventHandler.handleEvent(event, *(graph.vertexPtr(gr::Position { gr::X { xPos }, gr::Y { yPos } })).value());
+        mouseEventHandler.handleEvent(event, *graph.vertexPtr(gr::Position { gr::X { xPos }, gr::Y { yPos } }));
     }
 }
