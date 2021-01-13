@@ -6,6 +6,7 @@
 #include <compare>
 #include <functional>
 #include <iterator>
+#include <optional>
 #include <ostream>
 #include <ranges>
 #include <sstream>
@@ -66,28 +67,28 @@ bool Vertex::isValid(Vertex const& v, Graph& graph) const
     if (type() == pointObstacle)
         return false;
 
-    if (auto diff = v.pos() - pos(); diff.x.value() == 0 || diff.y.value() == 0)
+    if (auto const diff = v.pos() - pos(); diff.x.value() == 0 || diff.y.value() == 0)
         return true;
 
-    auto minXVertex = std::min(v, *this, [](Vertex const& a, Vertex const& b) {
+    auto const minXVertex = std::min(v, *this, [](Vertex const& a, Vertex const& b) {
         return a.pos().x < b.pos().x;
     });
-    auto minYVertex = std::min(v, *this, [](Vertex const& a, Vertex const& b) {
+    auto const minYVertex = std::min(v, *this, [](Vertex const& a, Vertex const& b) {
         return a.pos().y < b.pos().y;
     });
 
-    auto const validDiagonal = [](Vertex const* a, Vertex const* b) {
-        return a != nullptr && b != nullptr && a->type() != pointObstacle && b->type() != pointObstacle;
+    auto const validDiagonal = [](std::optional<Vertex*> const& a, std::optional<Vertex*> const& b) {
+        return a.has_value() && b.has_value() && (*a)->type() != pointObstacle && (*b)->type() != pointObstacle;
     };
 
     if (minXVertex == minYVertex) {
-        Vertex const* a = graph.vertexPtr(minXVertex.pos() + Position { X { 1 }, Y { 0 } });
-        Vertex const* b = graph.vertexPtr(minXVertex.pos() + Position { X { 0 }, Y { 1 } });
+        std::optional<Vertex*> const a = graph.vertexPtr(minXVertex.pos() + Position { X { 1 }, Y { 0 } });
+        std::optional<Vertex*> const b = graph.vertexPtr(minXVertex.pos() + Position { X { 0 }, Y { 1 } });
         return validDiagonal(a, b);
     }
 
-    Vertex const* a = graph.vertexPtr(minXVertex.pos() + Position { X { 0 }, Y { -1 } });
-    Vertex const* b = graph.vertexPtr(minXVertex.pos() + Position { X { 1 }, Y { 0 } });
+    std::optional<Vertex*> const a = graph.vertexPtr(minXVertex.pos() + Position { X { 0 }, Y { -1 } });
+    std::optional<Vertex*> const b = graph.vertexPtr(minXVertex.pos() + Position { X { 1 }, Y { 0 } });
     return validDiagonal(a, b);
 }
 
@@ -170,21 +171,18 @@ void Graph::buildEmpty(unsigned sizeX, unsigned sizeY)
     vertex[0][1].setType(pointEnd);
 }
 
-Graph::VertexType* Graph::vertexPtr(Position const& mPos)
+std::optional<Graph::VertexType*> Graph::vertexPtr(Position const& mPos)
 {
     if (mPos.x.value() >= 0
         && mPos.y.value() >= 0
         && mPos.x.value() < static_cast<decltype(mPos.x.value())>(vertex.size())
         && mPos.y.value() < static_cast<decltype(mPos.y.value())>(vertex[mPos.x.value()].size()))
-        return &vertex[mPos.x.value()][mPos.y.value()];
-    return nullptr;
+        return { &vertex[mPos.x.value()][mPos.y.value()] };
+    return std::nullopt;
 }
 
 std::vector<std::reference_wrapper<Graph::VertexType>> Graph::neighborhoods(Graph::VertexType const& v)
 {
-    std::vector<std::reference_wrapper<Vertex>> neigh;
-    neigh.reserve(Graph::closests);
-
     constexpr static std::array coords {
         Position { X { -1 }, Y { -1 } },
         Position { X { 0 }, Y { -1 } },
@@ -196,17 +194,15 @@ std::vector<std::reference_wrapper<Graph::VertexType>> Graph::neighborhoods(Grap
         Position { X { 1 }, Y { 1 } }
     };
 
-    auto view = std::ranges::views::transform(coords, [&](auto const& pos) {
+    auto view = std::ranges::views::transform(coords, [&](Position const& pos) {
         return vertexPtr({ v.pos() - pos });
-    }) | std::ranges::views::filter([&](auto* ptr) {
-        return ptr != nullptr && ptr->isValid(v, *this);
-    }) | std::ranges::views::transform([](auto* ptr) {
-        return std::ref(*ptr);
+    }) | std::ranges::views::filter([&](std::optional<Graph::VertexType*> ptr) {
+        return ptr.has_value() && (*ptr)->isValid(v, *this);
+    }) | std::ranges::views::transform([](std::optional<Graph::VertexType*> ptr) {
+        return std::ref(*(ptr.value()));
     });
 
-    std::ranges::copy(view, std::back_inserter(neigh));
-
-    return neigh;
+    return { std::begin(view), std::end(view) };
 }
 
 std::vector<std::vector<Graph::VertexType>>& Graph::nodes() { return vertex; }

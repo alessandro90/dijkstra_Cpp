@@ -6,6 +6,7 @@
 #include <exception>
 #include <functional>
 #include <limits>
+#include <optional>
 #include <ostream>
 #include <string_view>
 #include <utility>
@@ -82,7 +83,7 @@ public:
     using VertexType = Vertex;
     inline static constexpr unsigned closests { 8 };
 
-    [[nodiscard]] VertexType* vertexPtr(Position const& pos);
+    [[nodiscard]] std::optional<VertexType*> vertexPtr(Position const& pos);
     [[nodiscard]] std::vector<std::reference_wrapper<VertexType>> neighborhoods(VertexType const& v);
     [[nodiscard]] std::string stringify() const;
     [[nodiscard]] std::vector<std::vector<VertexType>>& nodes();
