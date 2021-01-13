@@ -5,6 +5,7 @@
 #include <cmath>
 #include <compare>
 #include <functional>
+#include <iterator>
 #include <ostream>
 #include <ranges>
 #include <sstream>
@@ -195,11 +196,16 @@ std::vector<std::reference_wrapper<Graph::VertexType>> Graph::neighborhoods(Grap
         Position { X { 1 }, Y { 1 } }
     };
 
-    for (auto const& pos : coords) {
-        if (auto ptr = vertexPtr({ v.pos() - pos });
-            ptr != nullptr && ptr->isValid(v, *this))
-            neigh.push_back(*ptr);
-    }
+    auto view = std::ranges::views::transform(coords, [&](auto const& pos) {
+        return vertexPtr({ v.pos() - pos });
+    }) | std::ranges::views::filter([&](auto* ptr) {
+        return ptr != nullptr && ptr->isValid(v, *this);
+    }) | std::ranges::views::transform([](auto* ptr) {
+        return std::ref(*ptr);
+    });
+
+    std::ranges::copy(view, std::back_inserter(neigh));
+
     return neigh;
 }
 

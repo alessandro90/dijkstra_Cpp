@@ -67,8 +67,7 @@ File::iterator& File::iterator::operator++()
 File::iterator File::iterator::operator++(int)
 {
     File::iterator it = *this;
-    if (!std::getline(*s, str))
-        setnull();
+    ++(*this);
     return it;
 }
 

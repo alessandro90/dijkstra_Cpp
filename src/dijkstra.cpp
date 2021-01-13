@@ -1,6 +1,7 @@
 #include "dijkstra.hpp"
 #include <algorithm>
 #include <optional>
+#include <ranges>
 
 Dijkstra::Dijkstra(gr::Graph& g)
 {
@@ -24,16 +25,12 @@ void Dijkstra::init(gr::Graph& g)
     reset();
     graph = &g;
     auto& vertices = graph->nodes();
-    for (auto& row : vertices) {
-        if (auto it = std::find_if(
-                row.begin(),
-                row.end(),
-                [](auto& node) { return node.isStart(); });
-            it != row.end()) {
-            unvisited.insert(*it);
-            break;
-        }
-    }
+    auto joinView = vertices | std::ranges::views::join;
+    auto it = std::ranges::find_if(joinView, [](auto const& node) {
+        return node.isStart();
+    });
+    if (it != std::end(joinView))
+        unvisited.insert(*it);
 }
 
 bool Dijkstra::done()
@@ -93,19 +90,18 @@ void Dijkstra::traverse(gr::Graph::VertexType const& v)
             return va.dist() < vb.dist();
         });
 
-    for (auto& n : neigh) {
-        auto& node = n.get();
-        if (node.dist() > nearest->get().dist()
-            || node.isStart()
-            || node.isEnd()
-            || node.isShortest()) {
-            continue;
-        }
-        if (nearest->get().pos() != node.pos() && !v.isEnd() && !v.isStart())
-            graph->markAs(v, gr::pointBifurcation);
-        graph->markAs(node, gr::pointShortest);
-        traverse(node);
-    }
+    std::ranges::for_each(neigh | std::ranges::views::filter([&](auto const& node) {
+        return !(node.get().dist() > nearest->get().dist()
+            || node.get().isStart()
+            || node.get().isEnd()
+            || node.get().isShortest());
+    }),
+        [&](auto& node) {
+            if (nearest->get().pos() != node.get().pos() && !v.isEnd() && !v.isStart())
+                graph->markAs(v, gr::pointBifurcation);
+            graph->markAs(node.get(), gr::pointShortest);
+            traverse(node.get());
+        });
 }
 
 bool Dijkstra::completed() const
